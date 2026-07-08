@@ -6,314 +6,177 @@ on:
 
   workflow_dispatch:
 
-permissions:
+*ermissions:
   contents: write
 
-jobs:
+job*:
   update-quiz:
-    runs-on: ubuntu-latest
+    runs-on: ubun*u-latest
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - name:*Check out repository
+        uses:*actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name:*Set up Python
+        uses: action*/setup-python@v5
         with:
-          python-version: "3.11"
+   *      python-version: "3.11"
 
-      - name: Install Python packages
-        run: |
-          pip install requests beautifulsoup4
+    * - name: Install Python packages
+ *      run: |
+          pip install*requests beautifulsoup4
 
-      - name: Generate questions from SAAS clinical website
+      - n*me: Generate questions from SAAS c*inical website
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      *   GEMINI_API_KEY: ${{ secrets.GEM*NI_API_KEY }}
         run: |
-          cat > generate_questions.py << 'PY'
+     *    cat > generate_questions.py <<*'PY'
           import os
-          import json
+         *import json
           import re
-          import time
-          import requests
-          from bs4 import BeautifulSoup
-          from urllib.parse import urljoin, urlparse
-          from datetime import datetime, timezone
+  *       import time
+          impor* requests
+          from bs4 impor* BeautifulSoup
+          from urll*b.parse import urljoin, urlparse
+ *        from datetime import datet*me, timezone
 
-          START_URL = "https://clinical.saambulance.sa.gov.au/tabs/home"
-          DOMAIN = "clinical.saambulance.sa.gov.au"
-          MAX_PAGES = 80
-          MODEL = "gemini-2.5-flash"
+          DOMAIN = "*linical.saambulance.sa.gov.au"
 
-          api_key = os.environ.get("GEMINI_API_KEY")
+  *       START_URLS = [
+              "https://clinical.saambulance.sa.gov.au/tabs/home",
+              "https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p"
+          ]
 
-          if not api_key:
-              raise RuntimeError("GEMINI_API_KEY is missing. Add it in GitHub Secrets.")
+          MAX_PAGES = 120
 
-          os.makedirs("data", exist_ok=True)
+ *        GEMINI_MODELS = [
+              "gemini-2.5-flash",
+              "gemini-2.0-flash",
+              "gemini-1.5-flash"
+          ]
+*          api_key = os.environ.get*"GEMINI_API_KEY")
 
-          def clean_url(url):
-              return url.split("#")[0].rstrip("/")
+          if no* api_key:
+              raise Runt*meError("GEMINI_API_KEY is missing* Add it in GitHub Secrets.")
 
-          def is_internal(url):
-              parsed = urlparse(url)
-              return parsed.netloc == DOMAIN
+    *     os.makedirs("data", exist_ok=*rue)
+          os.makedirs("debug"* exist_ok=True)
 
-          def html_to_text(html):
-              soup = BeautifulSoup(html, "html.parser")
+          def cle*n_url(url):
+              return u*l.split("#")[0].rstrip("/")
 
-              for tag in soup(["script", "style", "nav", "footer", "header"]):
-                  tag.decompose()
+     *    def is_internal(url):
+        *     parsed = urlparse(url)
+      *       return parsed.netloc == DOM*IN
 
-              text = soup.get_text(separator="\n")
-              text = re.sub(r"\n{3,}", "\n\n", text)
-              text = re.sub(r"[ \t]{2,}", " ", text)
+          def looks_like_usefu*_url(url):
+              if DOMAIN*not in url:
+                  retu*n False
 
-              return text.strip()
-
-          def crawl_site():
-              visited = set()
-              queue = [START_URL]
-              pages = []
-
-              while queue and len(pages) < MAX_PAGES:
-                  url = clean_url(queue.pop(0))
-
-                  if url in visited:
-                      continue
-
-                  visited.add(url)
-
-                  try:
-                      print(f"Crawling: {url}")
-                      response = requests.get(
-                          url,
-                          timeout=30,
-                          headers={
-                              "User-Agent": "SAAS Clinical Revision Quiz educational crawler"
-                          }
-                      )
-                      response.raise_for_status()
-                  except Exception as e:
-                      print(f"Failed to crawl {url}: {e}")
-                      continue
-
-                  html = response.text
-                  soup = BeautifulSoup(html, "html.parser")
-                  title = soup.title.get_text(strip=True) if soup.title else url
-                  text = html_to_text(html)
-
-                  if len(text) > 500:
-                      pages.append({
-                          "title": title,
-                          "url": url,
-                          "text": text[:8000]
-                      })
-
-                  for link in soup.find_all("a", href=True):
-                      next_url = clean_url(urljoin(url, link["href"]))
-
-                      if is_internal(next_url) and next_url not in visited and next_url not in queue:
-                          queue.append(next_url)
-
-                  time.sleep(0.4)
-
-              return pages
-
-          def extract_json_from_text(text):
-              text = text.strip()
-
-              if text.startswith("```"):
-                  text = re.sub(r"^```json", "", text, flags=re.IGNORECASE).strip()
-                  text = re.sub(r"^```", "", text).strip()
-                  text = re.sub(r"```$", "", text).strip()
-
-              start = text.find("[")
-              end = text.rfind("]")
-
-              if start == -1 or end == -1:
-                  return []
-
-              possible_json = text[start:end+1]
-
-              try:
-                  return json.loads(possible_json)
-              except Exception as e:
-                  print("Could not parse Gemini JSON:", e)
-                  print(text[:1000])
-                  return []
-
-          def ask_gemini(page):
-              prompt = f"""
-          You are creating a public formative revision quiz for paramedicine students.
-
-          Use ONLY the source text supplied below.
-          Do not use outside knowledge.
-          Do not infer anything that is not explicitly stated in the source text.
-          Do not create clinical advice.
-          Do not create questions requiring users to apply treatment unless the answer is explicitly stated in the source text.
-
-          Create exactly 4 quiz questions from this source page:
-          - 2 multiple choice questions
-          - 2 true/false questions
-
-          Return ONLY valid JSON.
-          Return a JSON array.
-          Do not include markdown.
-          Do not include explanations outside the JSON.
-
-          Each multiple choice question must use this structure:
-          {{
-            "question": "question text",
-            "type": "mcq",
-            "options": ["option A", "option B", "option C", "option D"],
-            "answer": "exact correct option text",
-            "source": "source URL",
-            "source_title": "source title"
-          }}
-
-          Each true/false question must use this structure:
-          {{
-            "question": "statement text",
-            "type": "tf",
-            "options": ["True", "False"],
-            "answer": "True or False",
-            "source": "source URL",
-            "source_title": "source title"
-          }}
-
-          Source title:
-          {page["title"]}
-
-          Source URL:
-          {page["url"]}
-
-          Source text:
-          {page["text"]}
-          """
-
-              endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={api_key}"
-
-              payload = {
-                  "contents": [
-                      {
-                          "parts": [
-                              {
-                                  "text": prompt
-                              }
-                          ]
-                      }
-                  ],
-                  "generationConfig": {
-                      "temperature": 0.2,
-                      "maxOutputTokens": 4096
-                  }
-              }
-
-              try:
-                  response = requests.post(endpoint, json=payload, timeout=90)
-                  response.raise_for_status()
-                  data = response.json()
-
-                  text = data["candidates"][0]["content"]["parts"][0]["text"]
-                  return extract_json_from_text(text)
-
-              except Exception as e:
-                  print(f"Gemini failed for {page['url']}: {e}")
-                  return []
-
-          def clean_questions(raw_questions):
-              cleaned = []
-
-              for q in raw_questions:
-                  if not isinstance(q, dict):
-                      continue
-
-                  question = str(q.get("question", "")).strip()
-                  qtype = str(q.get("type", "")).strip().lower()
-                  answer = str(q.get("answer", "")).strip()
-                  source = str(q.get("source", "")).strip()
-                  source_title = str(q.get("source_title", "")).strip()
-
-                  if not question or not answer or not source:
-                      continue
-
-                  if qtype not in ["mcq", "tf"]:
-                      continue
-
-                  options = q.get("options", [])
-
-                  if qtype == "mcq":
-                      if not isinstance(options, list) or len(options) != 4:
-                          continue
-
-                  if qtype == "tf":
-                      options = ["True", "False"]
-                      if answer not in ["True", "False"]:
-                          continue
-
-                  cleaned.append({
-                      "question": question,
-                      "type": qtype,
-                      "options": options,
-                      "answer": answer,
-                      "source": source,
-                      "source_title": source_title
-                  })
-
-              return cleaned
-
-          print("Starting crawl...")
-          pages = crawl_site()
-          print(f"Crawled {len(pages)} pages.")
-
-          all_questions = []
-
-          for i, page in enumerate(pages, start=1):
-              print(f"Generating questions for page {i}/{len(pages)}: {page['url']}")
-              generated = ask_gemini(page)
-              cleaned = clean_questions(generated)
-              all_questions.extend(cleaned)
-              time.sleep(1)
-
-          if not all_questions:
-              print("No questions generated. Keeping fallback question.")
-              all_questions = [
-                  {
-                      "question": "The quiz generator ran, but no valid questions were produced.",
-                      "type": "tf",
-                      "options": ["True", "False"],
-                      "answer": "True",
-                      "source": START_URL,
-                      "source_title": "Fallback"
-                  }
+              useful_part* = [
+                  "/tabs/home/",
+                  "/page/",
+                  "/medicine/",
+                  "/medicines/",
+                  "/cardiac/",
+                  "/respiratory/",
+                  "/trauma/",
+                  "/medical/",
+                  "/paediatric/",
+                  "/paediatrics/",
+                  "/obstetric/",
+                  "/procedure/",
+                  "/tools/",
+                  "/calculators/"
               ]
 
-          metadata = {
-              "last_updated": datetime.now(timezone.utc).isoformat(),
-              "source": START_URL,
-              "page_count": len(pages),
-              "question_count": len(all_questions)
-          }
+              re*urn any(part in url for part in us*ful_parts)
 
-          with open("data/questions.json", "w", encoding="utf-8") as f:
-              json.dump(all_questions, f, ensure_ascii=False, indent=2)
+          def html_to_*ext(html):
+              soup = Be*utifulSoup(html, "html.parser")
 
-          with open("data/metadata.json", "w", encoding="utf-8") as f:
-              json.dump(metadata, f, ensure_ascii=False, indent=2)
+ *            for tag in soup(["script", "style", "nav", "footer", "header", "noscript"]):
+               *  tag.decompose()
 
-          print(f"Saved {len(all_questions)} questions.")
-          PY
+              t*xt = soup.get_text(separator="\n")*              text = re.sub(r"\n{3*}", "\n\n", text)
+              te*t = re.sub(r"[ \t]{2,}", " ", text*
 
-          python generate_questions.py
+              return text.strip(*
 
-      - name: Commit updated quiz data
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          def extract_urls_from_*tml(html, base_url):
+             *urls = set()
 
-          git add data/questions.json data/metadata.json
+              soup =*BeautifulSoup(html, "html.parser")*
+              for link in soup.fi*d_all("a", href=True):
+           *      full_url = clean_url(urljoin*base_url, link["href"]))
+         *        if is_internal(full_url):
+*                     urls.add(full*url)
 
-          git diff --staged --quiet || git commit -m "Update quiz questions"
+              raw_matches = *e.findall(
+                  r'https://clinical\.saambulance\.sa\.gov\.au/[A-Za-z0-9_\-\/\.\?\=\&%]+',
+ *                html
+             *)
 
-          git push
+              for match in raw_*atches:
+                  urls.add*clean_url(match))
+
+              r*lative_matches = re.findall(
+     *            r'/tabs/home/[A-Za-z0-9_\-\/]+',
+                  html
+ *            )
+
+              for m*tch in relative_matches:
+         *        urls.add(clean_url(urljoin*base_url, match)))
+
+              *eturn sorted(urls)
+
+          def *etch_page(url):
+              resp*nse = requests.get(
+              *   url,
+                  timeout=*0,
+                  headers={
+   *                  "User-Agent": "S*AS Clinical Revision Quiz educatio*al crawler"
+                  }
+  *           )
+              respons*.raise_for_status()
+              *eturn response.text
+
+          def*crawl_site():
+              visite* = set()
+              queue = [clean_url(u) for u in START_URLS]
+   *          pages = []
+             *crawl_log = []
+
+              whil* queue and len(pages) < MAX_PAGES:*                  url = clean_url(*ueue.pop(0))
+
+                  if*url in visited:
+                  *   continue
+
+                  vis*ted.add(url)
+
+                  tr*:
+                      print(f"Cr*wling: {url}")
+                   *  html = fetch_page(url)
+         *        except Exception as e:
+   *                  message = f"Fail*d to crawl {url}: {e}"
+           *          print(message)
+         *            crawl_log.append(messa*e)
+                      continue
+*                  soup = Beautiful*oup(html, "html.parser")
+         *        title = soup.title.get_tex*(strip=True) if soup.title else ur*
+                  text = html_to_*ext(html)
+
+                  extra*ted_message = f"Extracted {len(tex*)} characters from {url}"
+        *         print(extracted_message)
+*                 crawl_log.append(*xtracted_message)
+
+               *  safe_filename = re.sub(r"[^A-Za-z0-9]+", "_", url)[:120]
+          *       with open(f"debug/{safe_fil*name}.txt", "w", encoding="utf-8")*as f:
+                      f.writ*("URL: " + url + "\n\n")
+         *            f.write("TITLE: " + ti*le + "\n\n")
+                     *f.write(text[:10000])
+
+           *      if len(text) > 50:
+         *            pages.append({
+       *                  "title": title,
+*                         "url": ur*,
