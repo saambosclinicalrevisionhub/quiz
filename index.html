@@ -1,74 +1,321 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<title>SAAS Clinical Revision Hub</title>
+  <meta charset="utf-8">
+  <title>SAAS Clinical Revision Hub</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+      line-height: 1.5;
+      background: #f7f7f7;
+      color: #222;
+    }
+
+    .container {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    .warning {
+      background: #fff3cd;
+      border-left: 5px solid #f0ad4e;
+      padding: 12px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 16px;
+      margin-bottom: 6px;
+    }
+
+    select, button {
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 8px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+    }
+
+    button {
+      cursor: pointer;
+      background: #005eb8;
+      color: white;
+      border: none;
+      margin-right: 8px;
+    }
+
+    button:hover {
+      background: #004b93;
+    }
+
+    .question-card {
+      margin-top: 24px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: #fafafa;
+    }
+
+    .option {
+      display: block;
+      width: 100%;
+      text-align: left;
+      margin: 8px 0;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: white;
+      color: #222;
+    }
+
+    .option:hover {
+      background: #eef5ff;
+    }
+
+    .option.correct {
+      background: #d4edda;
+      border-color: #28a745;
+    }
+
+    .option.incorrect {
+      background: #f8d7da;
+      border-color: #dc3545;
+    }
+
+    .feedback {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #eef3f8;
+    }
+
+    .source {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .meta {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .small {
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
 </head>
 
 <body>
+  <div class="container">
 
-<h1>SAAS Clinical Revision Hub</h1>
+    <h1>SAAS Clinical Revision Hub</h1>
 
-<p>
-Educational revision only.
-Not clinical advice.
-</p>
+    <div class="warning">
+      <strong>Educational revision only.</strong><br>
+      This quiz is AI-generated from publicly available SA Ambulance Service clinical guideline content.
+      It is not clinical advice, treatment advice, operational advice, or a substitute for the original SAAS Clinical Practice Guidelines.
+    </div>
 
-<button onclick="loadQuestion()">
-New Question
-</button>
+    <label for="levelSelect">Choose clinical level:</label>
+    <select id="levelSelect">
+      <option value="All">All levels</option>
+      <option value="Ambulance Assist">Ambulance Assist</option>
+      <option value="Ambulance Responder">Ambulance Responder</option>
+      <option value="Ambulance Officer">Ambulance Officer</option>
+      <option value="Ambulance Officer Extended Scope">Ambulance Officer Extended Scope</option>
+      <option value="Paramedic">Paramedic</option>
+      <option value="Intensive Care Paramedic">Intensive Care Paramedic</option>
+      <option value="Extended Care Paramedic">Extended Care Paramedic</option>
+    </select>
 
-<div id="questionBox">
-Loading...
-</div>
+    <div class="meta" id="questionCount">
+      Loading questions...
+    </div>
 
-<script>
+    <button onclick="loadQuestion()">New Question</button>
 
-let questions=[];
+    <div id="questionBox" class="question-card">
+      Loading...
+    </div>
 
-fetch('data/questions.json')
-.then(response => response.json())
-.then(data => {
-  questions=data;
-  loadQuestion();
-})
-.catch(() => {
-  document.getElementById("questionBox").innerHTML =
-    "Could not load questions.";
-});
+  </div>
 
-function loadQuestion(){
+  <script>
+    let questions = [];
+    let currentQuestion = null;
 
-  if(questions.length===0){
-    return;
-  }
+    fetch("data/questions.json")
+      .then(response => response.json())
+      .then(data => {
+        questions = data;
+        updateQuestionCount();
+        loadQuestion();
+      })
+      .catch(error => {
+        document.getElementById("questionBox").innerHTML =
+          "<p>Could not load questions.</p>";
+        document.getElementById("questionCount").innerHTML =
+          "No questions loaded.";
+      });
 
-  const q =
-    questions[Math.floor(Math.random()*questions.length)];
-
-  let html="";
-
-  html += "<h3>" + q.question + "</h3>";
-
-  if(q.options){
-
-    q.options.forEach(option=>{
-      html += "<p>" + option + "</p>";
+    document.getElementById("levelSelect").addEventListener("change", function() {
+      updateQuestionCount();
+      loadQuestion();
     });
 
-  }
+    function getSelectedLevel() {
+      return document.getElementById("levelSelect").value;
+    }
 
-  html += "<p><strong>Answer:</strong> "
-       + q.answer + "</p>";
+    function getFilteredQuestions() {
+      const selectedLevel = getSelectedLevel();
 
-  html += "<p><strong>Source:</strong> "
-       + q.source + "</p>";
+      if (selectedLevel === "All") {
+        return questions;
+      }
 
-  document.getElementById("questionBox").innerHTML =
-      html;
-}
+      const levelFiltered = questions.filter(q =>
+        q.clinical_level === selectedLevel
+      );
 
-</script>
+      /*
+        Temporary fallback:
+        Current generated questions may not yet have a clinical_level field.
+        Until the GitHub Action is updated to add that field, show all questions
+        rather than showing an empty quiz.
+      */
+      if (levelFiltered.length === 0) {
+        return questions;
+      }
 
+      return levelFiltered;
+    }
+
+    function updateQuestionCount() {
+      const selectedLevel = getSelectedLevel();
+      const filtered = getFilteredQuestions();
+
+      document.getElementById("questionCount").innerHTML =
+        "Selected level: <strong>" + selectedLevel + "</strong><br>" +
+        "Available questions: <strong>" + filtered.length + "</strong>" +
+        "<br><span class='small'>Level-specific filtering will apply once questions are generated with clinical level metadata.</span>";
+    }
+
+    function loadQuestion() {
+      const filtered = getFilteredQuestions();
+
+      if (!filtered || filtered.length === 0) {
+        document.getElementById("questionBox").innerHTML =
+          "<p>No questions are currently available for this clinical level.</p>";
+        return;
+      }
+
+      currentQuestion = filtered[Math.floor(Math.random() * filtered.length)];
+
+      let html = "";
+
+      html += "<h2>Question</h2>";
+      html += "<p><strong>" + escapeHtml(currentQuestion.question) + "</strong></p>";
+
+      if (currentQuestion.clinical_level) {
+        html += "<p class='small'><strong>Clinical level:</strong> " +
+          escapeHtml(currentQuestion.clinical_level) + "</p>";
+      }
+
+      if (currentQuestion.type === "mcq") {
+        html += "<div>";
+
+        currentQuestion.options.forEach(option => {
+          html += "<button class='option' onclick='checkAnswer(this)' data-answer='" +
+            escapeHtml(option) + "'>" +
+            escapeHtml(option) +
+            "</button>";
+        });
+
+        html += "</div>";
+      }
+
+      if (currentQuestion.type === "tf") {
+        html += "<div>";
+        html += "<button class='option' onclick='checkAnswer(this)' data-answer='True'>True</button>";
+        html += "<button class='option' onclick='checkAnswer(this)' data-answer='False'>False</button>";
+        html += "</div>";
+      }
+
+      html += "<div id='feedback'></div>";
+
+      document.getElementById("questionBox").innerHTML = html;
+    }
+
+    function checkAnswer(button) {
+      const selectedAnswer = button.getAttribute("data-answer");
+      const correctAnswer = currentQuestion.answer;
+
+      const optionButtons = document.querySelectorAll(".option");
+
+      optionButtons.forEach(btn => {
+        const answer = btn.getAttribute("data-answer");
+
+        if (answer === correctAnswer) {
+          btn.classList.add("correct");
+        }
+
+        if (answer === selectedAnswer && answer !== correctAnswer) {
+          btn.classList.add("incorrect");
+        }
+
+        btn.disabled = true;
+      });
+
+      let feedback = "";
+
+      if (selectedAnswer === correctAnswer) {
+        feedback += "<div class='feedback'><strong>Correct.</strong>";
+      } else {
+        feedback += "<div class='feedback'><strong>Incorrect.</strong>";
+        feedback += "<br>Correct answer: <strong>" + escapeHtml(correctAnswer) + "</strong>";
+      }
+
+      if (currentQuestion.source) {
+        feedback += "<div class='source'>";
+        feedback += "Source: <a href='" + escapeHtml(currentQuestion.source) + "' target='_blank'>";
+        feedback += escapeHtml(currentQuestion.source_title || currentQuestion.source);
+        feedback += "</a>";
+        feedback += "</div>";
+      }
+
+      feedback += "</div>";
+
+      document.getElementById("feedback").innerHTML = feedback;
+    }
+
+    function escapeHtml(text) {
+      if (text === null || text === undefined) {
+        return "";
+      }
+
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
 </body>
 </html>
