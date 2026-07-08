@@ -1,6 +1,9 @@
 {
-  "last_updated": "2026-07-08T15:42:35.625946+00:00",
-  "source": "https://clinical.saambulance.sa.gov.au/tabs/home",
+  "last_updated": "2026-07-08T16:01:54.656407+00:00",
+  "starting_urls": [
+    "https://clinical.saambulance.sa.gov.au/tabs/home",
+    "https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p"
+  ],
   "page_count": 0,
   "question_count": 1
 }
