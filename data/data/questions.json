@@ -1,0 +1,14 @@
+[
+  {
+    "question": "What colour is the sky on a clear day?",
+    "type": "mcq",
+    "options": [
+      "Blue",
+      "Green",
+      "Red",
+      "Yellow"
+    ],
+    "answer": "Blue",
+    "source": "Test Question"
+  }
+]
