@@ -1,20 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SAAS Clinical Revision Quiz</title>
+<meta charset="utf-8">
+<title>SAAS Clinical Revision Hub</title>
 </head>
+
 <body>
 
-<h1>SAAS Clinical Revision Quiz</h1>
+<h1>SAAS Clinical Revision Hub</h1>
 
 <p>
-Educational revision resource.
+Educational revision only.
 Not clinical advice.
 </p>
 
-<p>
-Quiz questions will appear here.
-</p>
+<button onclick="loadQuestion()">
+New Question
+</button>
+
+<div id="questionBox">
+Loading...
+</div>
+
+<script>
+
+let questions=[];
+
+fetch('data/questions.json')
+.then(response => response.json())
+.then(data => {
+  questions=data;
+  loadQuestion();
+})
+.catch(() => {
+  document.getElementById("questionBox").innerHTML =
+    "Could not load questions.";
+});
+
+function loadQuestion(){
+
+  if(questions.length===0){
+    return;
+  }
+
+  const q =
+    questions[Math.floor(Math.random()*questions.length)];
+
+  let html="";
+
+  html += "<h3>" + q.question + "</h3>";
+
+  if(q.options){
+
+    q.options.forEach(option=>{
+      html += "<p>" + option + "</p>";
+    });
+
+  }
+
+  html += "<p><strong>Answer:</strong> "
+       + q.answer + "</p>";
+
+  html += "<p><strong>Source:</strong> "
+       + q.source + "</p>";
+
+  document.getElementById("questionBox").innerHTML =
+      html;
+}
+
+</script>
 
 </body>
 </html>
