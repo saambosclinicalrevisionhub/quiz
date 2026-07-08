@@ -24,6 +24,7 @@
 
     h1 {
       margin-top: 0;
+      color: #222;
     }
 
     .warning {
@@ -31,6 +32,7 @@
       border-left: 5px solid #f0ad4e;
       padding: 12px;
       margin-bottom: 20px;
+      border-radius: 4px;
     }
 
     label {
@@ -46,6 +48,12 @@
       margin-top: 8px;
       border-radius: 6px;
       border: 1px solid #aaa;
+    }
+
+    select {
+      width: 100%;
+      max-width: 420px;
+      background: white;
     }
 
     button {
@@ -92,11 +100,13 @@
     .option.correct {
       background: #d4edda;
       border-color: #28a745;
+      color: #155724;
     }
 
     .option.incorrect {
       background: #f8d7da;
       border-color: #dc3545;
+      color: #721c24;
     }
 
     .feedback {
@@ -112,9 +122,24 @@
       color: #555;
     }
 
+    .source a {
+      color: #005eb8;
+      word-break: break-word;
+    }
+
     .small {
       font-size: 14px;
       color: #666;
+    }
+
+    .category {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: #e9ecef;
+      color: #333;
+      font-size: 13px;
     }
   </style>
 </head>
@@ -126,8 +151,8 @@
 
     <div class="warning">
       <strong>Educational revision only.</strong><br>
-      This quiz is AI-generated directly from content on the publicly available SA Ambulance Service Clinical website (https://clinical.saambulance.sa.gov.au/tabs/home).
-      It is not clinical advice or operational advice or a substitute for the original SAAS Clinical website/App.
+      This quiz is AI-generated directly from content on the publicly available SA Ambulance Service Clinical website.
+      It is not clinical advice or operational advice, or a substitute for the original SAAS Clinical webiste/App.
     </div>
 
     <label for="levelSelect">Select your clinical level</label>
@@ -210,6 +235,10 @@
 
       let html = "";
 
+      if (currentQuestion.content_category) {
+        html += "<div class='category'>" + escapeHtml(currentQuestion.content_category) + "</div>";
+      }
+
       html += "<h2>Question</h2>";
       html += "<p><strong>" + escapeHtml(currentQuestion.question) + "</strong></p>";
 
@@ -265,6 +294,10 @@
       } else {
         feedback += "<div class='feedback'><strong>Incorrect.</strong>";
         feedback += "<br>Correct answer: <strong>" + escapeHtml(correctAnswer) + "</strong>";
+      }
+
+      if (currentQuestion.explanation) {
+        feedback += "<br><br><strong>Why:</strong> " + escapeHtml(currentQuestion.explanation);
       }
 
       if (currentQuestion.source) {
