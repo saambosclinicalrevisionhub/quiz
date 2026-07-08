@@ -1,4 +1,44 @@
 [
-  "Extracted 2084 characters from https://clinical.saambulance.sa.gov.au/tabs/home",
-  "Extracted 4959 characters from https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p"
+  {
+    "clinical_level": "Ambulance Assist",
+    "selected_level_successfully": false,
+    "home_text_length": 2084
+  },
+  "[Ambulance Assist] Extracted 4959 characters from https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p",
+  {
+    "clinical_level": "Ambulance Responder",
+    "selected_level_successfully": false,
+    "home_text_length": 2084
+  },
+  "[Ambulance Responder] Extracted 4959 characters from https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p",
+  {
+    "clinical_level": "Ambulance Officer",
+    "selected_level_successfully": false,
+    "home_text_length": 2084
+  },
+  "[Ambulance Officer] Extracted 4959 characters from https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p",
+  {
+    "clinical_level": "Ambulance Officer Extended Scope",
+    "selected_level_successfully": false,
+    "home_text_length": 2084
+  },
+  "[Ambulance Officer Extended Scope] Extracted 4959 characters from https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p",
+  {
+    "clinical_level": "Paramedic",
+    "selected_level_successfully": false,
+    "home_text_length": 2084
+  },
+  "[Paramedic] Extracted 4959 characters from https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p",
+  {
+    "clinical_level": "Intensive Care Paramedic",
+    "selected_level_successfully": false,
+    "home_text_length": 2084
+  },
+  "[Intensive Care Paramedic] Extracted 4959 characters from https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p",
+  {
+    "clinical_level": "Extended Care Paramedic",
+    "selected_level_successfully": false,
+    "home_text_length": 2084
+  },
+  "[Extended Care Paramedic] Extracted 4959 characters from https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p"
 ]

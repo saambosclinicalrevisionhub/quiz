@@ -1,9 +1,21 @@
 {
-  "last_updated": "2026-07-08T16:07:30.758996+00:00",
-  "starting_urls": [
-    "https://clinical.saambulance.sa.gov.au/tabs/home",
-    "https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p"
+  "last_updated": "2026-07-08T16:29:33.535093+00:00",
+  "clinical_levels": [
+    "Ambulance Assist",
+    "Ambulance Responder",
+    "Ambulance Officer",
+    "Ambulance Officer Extended Scope",
+    "Paramedic",
+    "Intensive Care Paramedic",
+    "Extended Care Paramedic"
   ],
-  "page_count": 2,
-  "question_count": 8
+  "max_pages_per_level": 5,
+  "page_count": 7,
+  "question_count": 16,
+  "question_count_by_level": {
+    "Ambulance Assist": 4,
+    "Ambulance Officer": 4,
+    "Ambulance Officer Extended Scope": 4,
+    "Paramedic": 4
+  }
 }
