@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>SAAS Clinical Revision Hub</title>
+  <title>SA Ambos Clinical Revision Hub</title>
 
   <style>
     body {
@@ -60,6 +60,11 @@
       background: #004b93;
     }
 
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+
     .question-card {
       margin-top: 24px;
       padding: 20px;
@@ -107,12 +112,6 @@
       color: #555;
     }
 
-    .meta {
-      margin-top: 10px;
-      font-size: 14px;
-      color: #555;
-    }
-
     .small {
       font-size: 14px;
       color: #666;
@@ -123,17 +122,17 @@
 <body>
   <div class="container">
 
-    <h1>SAAS Clinical Revision Hub</h1>
+    <h1>SA Ambos Clinical Revision Hub</h1>
 
     <div class="warning">
       <strong>Educational revision only.</strong><br>
-      This quiz is AI-generated from publicly available SA Ambulance Service clinical guideline content.
-      It is not clinical advice, treatment advice, operational advice, or a substitute for the original SAAS Clinical Practice Guidelines.
+      This quiz is AI-generated directly from content on the publicly available SA Ambulance Service Clinical website.
+      It is not clinical advice or operational advice, or a substitute for the original SAAS Clinical webiste/App.
     </div>
 
-    <label for="levelSelect">Choose clinical level:</label>
+    <label for="levelSelect">Select your clinical level</label>
     <select id="levelSelect">
-      <option value="All">All levels</option>
+      <option value="" selected disabled>Select a level</option>
       <option value="Ambulance Assist">Ambulance Assist</option>
       <option value="Ambulance Responder">Ambulance Responder</option>
       <option value="Ambulance Officer">Ambulance Officer</option>
@@ -143,14 +142,14 @@
       <option value="Extended Care Paramedic">Extended Care Paramedic</option>
     </select>
 
-    <div class="meta" id="questionCount">
-      Loading questions...
-    </div>
+    <br>
 
-    <button onclick="loadQuestion()">New Question</button>
+    <button id="newQuestionButton" onclick="loadQuestion()" disabled>
+      New Question
+    </button>
 
     <div id="questionBox" class="question-card">
-      Loading...
+      Please select your clinical level to begin.
     </div>
 
   </div>
@@ -163,18 +162,14 @@
       .then(response => response.json())
       .then(data => {
         questions = data;
-        updateQuestionCount();
-        loadQuestion();
       })
       .catch(error => {
         document.getElementById("questionBox").innerHTML =
           "<p>Could not load questions.</p>";
-        document.getElementById("questionCount").innerHTML =
-          "No questions loaded.";
       });
 
     document.getElementById("levelSelect").addEventListener("change", function() {
-      updateQuestionCount();
+      document.getElementById("newQuestionButton").disabled = false;
       loadQuestion();
     });
 
@@ -185,43 +180,29 @@
     function getFilteredQuestions() {
       const selectedLevel = getSelectedLevel();
 
-      if (selectedLevel === "All") {
-        return questions;
+      if (!selectedLevel) {
+        return [];
       }
 
-      const levelFiltered = questions.filter(q =>
+      return questions.filter(q =>
         q.clinical_level === selectedLevel
       );
-
-      /*
-        Temporary fallback:
-        Current generated questions may not yet have a clinical_level field.
-        Until the GitHub Action is updated to add that field, show all questions
-        rather than showing an empty quiz.
-      */
-      if (levelFiltered.length === 0) {
-        return questions;
-      }
-
-      return levelFiltered;
-    }
-
-    function updateQuestionCount() {
-      const selectedLevel = getSelectedLevel();
-      const filtered = getFilteredQuestions();
-
-      document.getElementById("questionCount").innerHTML =
-        "Selected level: <strong>" + selectedLevel + "</strong><br>" +
-        "Available questions: <strong>" + filtered.length + "</strong>" +
-        "<br><span class='small'>Level-specific filtering will apply once questions are generated with clinical level metadata.</span>";
     }
 
     function loadQuestion() {
+      const selectedLevel = getSelectedLevel();
+
+      if (!selectedLevel) {
+        document.getElementById("questionBox").innerHTML =
+          "<p>Please select your clinical level to begin.</p>";
+        return;
+      }
+
       const filtered = getFilteredQuestions();
 
       if (!filtered || filtered.length === 0) {
         document.getElementById("questionBox").innerHTML =
-          "<p>No questions are currently available for this clinical level.</p>";
+          "<p>No questions are currently available for this clinical level. Please try again after the next quiz update.</p>";
         return;
       }
 
@@ -231,11 +212,6 @@
 
       html += "<h2>Question</h2>";
       html += "<p><strong>" + escapeHtml(currentQuestion.question) + "</strong></p>";
-
-      if (currentQuestion.clinical_level) {
-        html += "<p class='small'><strong>Clinical level:</strong> " +
-          escapeHtml(currentQuestion.clinical_level) + "</p>";
-      }
 
       if (currentQuestion.type === "mcq") {
         html += "<div>";
