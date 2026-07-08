@@ -2,36 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SA Ambos Clinical Revision Hub</title>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 900px;
-      margin: auto;
-      padding: 20px;
-      line-height: 1.5;
-      background: #f7f7f7;
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: #f2f4f7;
       color: #222;
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.5;
+    }
+
+    body {
+      padding: 20px;
     }
 
     .container {
-      background: white;
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
       padding: 24px;
       border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
     }
 
     h1 {
       margin-top: 0;
+      margin-bottom: 16px;
       color: #222;
+      font-size: 32px;
     }
 
     .warning {
       background: #fff3cd;
       border-left: 5px solid #f0ad4e;
-      padding: 12px;
-      margin-bottom: 20px;
+      padding: 14px;
+      margin-bottom: 22px;
       border-radius: 4px;
     }
 
@@ -47,26 +56,25 @@
       margin-bottom: 6px;
     }
 
-    select, button {
-      padding: 10px;
-      font-size: 16px;
-      margin-top: 8px;
-      border-radius: 6px;
-      border: 1px solid #aaa;
-    }
-
     select {
       width: 100%;
       max-width: 420px;
-      background: white;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+      background: #ffffff;
     }
 
     button {
+      padding: 10px 14px;
+      font-size: 16px;
+      margin-top: 14px;
+      border-radius: 6px;
+      border: none;
       cursor: pointer;
       background: #005eb8;
-      color: white;
-      border: none;
-      margin-right: 8px;
+      color: #ffffff;
     }
 
     button:hover {
@@ -84,6 +92,7 @@
       border: 1px solid #ddd;
       border-radius: 10px;
       background: #fafafa;
+      min-height: 80px;
     }
 
     .option {
@@ -94,7 +103,7 @@
       padding: 12px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      background: white;
+      background: #ffffff;
       color: #222;
     }
 
@@ -108,3 +117,269 @@
       color: #155724;
     }
 
+    .option.incorrect {
+      background: #f8d7da;
+      border-color: #dc3545;
+      color: #721c24;
+    }
+
+    .feedback {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #eef3f8;
+    }
+
+    .source {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .source a {
+      color: #005eb8;
+      word-break: break-word;
+    }
+
+    .category {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: #e9ecef;
+      color: #333;
+      font-size: 13px;
+    }
+
+    .status {
+      color: #555;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>SA Ambos Clinical Revision Hub</h1>
+
+    <div class="warning">
+      <strong>Educational revision only.</strong><br>
+      This quiz is AI-generated directly from content on the publicly available
+      <a href="https://clinical.saambulance.sa.gov.au/tabs/home" target="_blank" rel="noopener">
+        SA Ambulance Service Clinical website
+      </a>.
+      It is not clinical advice or operational advice, or a substitute for the original SAAS Clinical website/App.
+    </div>
+
+    <label for="levelSelect">Select your clinical level</label>
+
+    <select id="levelSelect">
+      <option value="" selected>Select a level</option>
+      <option value="Ambulance Assist">Ambulance Assist</option>
+      <option value="Ambulance Responder">Ambulance Responder</option>
+      <option value="Ambulance Officer">Ambulance Officer</option>
+      <option value="Ambulance Officer Extended Scope">Ambulance Officer Extended Scope</option>
+      <option value="Paramedic">Paramedic</option>
+      <option value="Intensive Care Paramedic">Intensive Care Paramedic</option>
+      <option value="Extended Care Paramedic">Extended Care Paramedic</option>
+    </select>
+
+    <br>
+
+    <button id="newQuestionButton" type="button" disabled>
+      New Question
+    </button>
+
+    <div id="questionBox" class="question-card">
+      <p class="status">Please select your clinical level to begin.</p>
+    </div>
+  </div>
+
+  <script>
+    let questions = [];
+    let currentQuestion = null;
+
+    const levelSelect = document.getElementById("levelSelect");
+    const newQuestionButton = document.getElementById("newQuestionButton");
+    const questionBox = document.getElementById("questionBox");
+
+    function escapeHtml(text) {
+      if (text === null || text === undefined) {
+        return "";
+      }
+
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function getSelectedLevel() {
+      return levelSelect.value;
+    }
+
+    function getFilteredQuestions() {
+      const selectedLevel = getSelectedLevel();
+
+      if (!selectedLevel) {
+        return [];
+      }
+
+      return questions.filter(function(q) {
+        return q.clinical_level === selectedLevel;
+      });
+    }
+
+    function loadQuestionsFile() {
+      fetch("data/questions.json?cacheBust=" + new Date().getTime())
+        .then(function(response) {
+          if (!response.ok) {
+            throw new Error("Could not load questions.json");
+          }
+
+          return response.json();
+        })
+        .then(function(data) {
+          if (Array.isArray(data)) {
+            questions = data;
+          } else {
+            questions = [];
+          }
+        })
+        .catch(function(error) {
+          questionBox.innerHTML =
+            "<p class='status'>Could not load questions. Please try again after the next quiz update.</p>";
+        });
+    }
+
+    function loadQuestion() {
+      const selectedLevel = getSelectedLevel();
+
+      if (!selectedLevel) {
+        questionBox.innerHTML =
+          "<p class='status'>Please select your clinical level to begin.</p>";
+        return;
+      }
+
+      const filtered = getFilteredQuestions();
+
+      if (!filtered || filtered.length === 0) {
+        questionBox.innerHTML =
+          "<p class='status'>No questions are currently available for this clinical level. Please try again after the next quiz update.</p>";
+        return;
+      }
+
+      currentQuestion = filtered[Math.floor(Math.random() * filtered.length)];
+
+      let html = "";
+
+      if (currentQuestion.content_category) {
+        html += "<div class='category'>" + escapeHtml(currentQuestion.content_category) + "</div>";
+      }
+
+      html += "<h2>Question</h2>";
+      html += "<p><strong>" + escapeHtml(currentQuestion.question) + "</strong></p>";
+
+      if (currentQuestion.type === "mcq" && Array.isArray(currentQuestion.options)) {
+        html += "<div>";
+
+        currentQuestion.options.forEach(function(option) {
+          html += "<button type='button' class='option' data-answer='" +
+            escapeHtml(option) + "'>" +
+            escapeHtml(option) +
+            "</button>";
+        });
+
+        html += "</div>";
+      }
+
+      if (currentQuestion.type === "tf") {
+        html += "<div>";
+        html += "<button type='button' class='option' data-answer='True'>True</button>";
+        html += "<button type='button' class='option' data-answer='False'>False</button>";
+        html += "</div>";
+      }
+
+      html += "<div id='feedback'></div>";
+
+      questionBox.innerHTML = html;
+
+      const optionButtons = document.querySelectorAll(".option");
+
+      optionButtons.forEach(function(button) {
+        button.addEventListener("click", function() {
+          checkAnswer(button);
+        });
+      });
+    }
+
+    function checkAnswer(button) {
+      if (!currentQuestion) {
+        return;
+      }
+
+      const selectedAnswer = button.getAttribute("data-answer");
+      const correctAnswer = currentQuestion.answer;
+
+      const optionButtons = document.querySelectorAll(".option");
+
+      optionButtons.forEach(function(btn) {
+        const answer = btn.getAttribute("data-answer");
+
+        if (answer === correctAnswer) {
+          btn.classList.add("correct");
+        }
+
+        if (answer === selectedAnswer && answer !== correctAnswer) {
+          btn.classList.add("incorrect");
+        }
+
+        btn.disabled = true;
+      });
+
+      let feedback = "";
+
+      if (selectedAnswer === correctAnswer) {
+        feedback += "<div class='feedback'><strong>Correct.</strong>";
+      } else {
+        feedback += "<div class='feedback'><strong>Incorrect.</strong>";
+        feedback += "<br>Correct answer: <strong>" + escapeHtml(correctAnswer) + "</strong>";
+      }
+
+      if (currentQuestion.explanation) {
+        feedback += "<br><br><strong>Why:</strong> " + escapeHtml(currentQuestion.explanation);
+      }
+
+      if (currentQuestion.source) {
+        feedback += "<div class='source'>";
+        feedback += "Source: <a href='" + escapeHtml(currentQuestion.source) + "' target='_blank' rel='noopener'>";
+        feedback += escapeHtml(currentQuestion.source_title || currentQuestion.source);
+        feedback += "</a>";
+        feedback += "</div>";
+      }
+
+      feedback += "</div>";
+
+      document.getElementById("feedback").innerHTML = feedback;
+    }
+
+    levelSelect.addEventListener("change", function() {
+      if (getSelectedLevel()) {
+        newQuestionButton.disabled = false;
+        loadQuestion();
+      } else {
+        newQuestionButton.disabled = true;
+        questionBox.innerHTML =
+          "<p class='status'>Please select your clinical level to begin.</p>";
+      }
+    });
+
+    newQuestionButton.addEventListener("click", function() {
+      loadQuestion();
+    });
+
+    loadQuestionsFile();
+  </script>
+</body>
+</html>
