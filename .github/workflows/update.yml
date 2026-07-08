@@ -23,7 +23,7 @@ jobs:
 
       - name: Install Python packages
         run: |
-          pip install requests beautifulsoup4 playwright
+          pip install requests playwright
           python -m playwright install chromium
 
       - name: Generate quiz questions
@@ -42,13 +42,19 @@ jobs:
           from playwright.async_api import async_playwright
 
           DOMAIN = "clinical.saambulance.sa.gov.au"
+          HOME_URL = "https://clinical.saambulance.sa.gov.au/tabs/home"
 
-          START_URLS = [
-              "https://clinical.saambulance.sa.gov.au/tabs/home",
-              "https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p"
+          CLINICAL_LEVELS = [
+              "Ambulance Assist",
+              "Ambulance Responder",
+              "Ambulance Officer",
+              "Ambulance Officer Extended Scope",
+              "Paramedic",
+              "Intensive Care Paramedic",
+              "Extended Care Paramedic"
           ]
 
-          MAX_PAGES = 20
+          MAX_PAGES_PER_LEVEL = 5
 
           GEMINI_MODELS = [
               "gemini-2.5-flash",
@@ -89,8 +95,67 @@ jobs:
 
               return any(part in url for part in useful_parts)
 
-          async def get_rendered_page(browser, url):
-              page = await browser.new_page()
+          def is_home_or_low_value_page(url):
+              cleaned = clean_url(url)
+
+              low_value_urls = [
+                  HOME_URL
+              ]
+
+              return cleaned in low_value_urls
+
+          async def select_clinical_level(page, level):
+              selected = False
+
+              print(f"Trying to select clinical level: {level}")
+
+              try:
+                  selectors = await page.locator("select").all()
+
+                  for selector in selectors:
+                      try:
+                          await selector.select_option(label=level, timeout=3000)
+                          selected = True
+                          print(f"Selected {level} using dropdown label.")
+                          break
+                      except Exception:
+                          pass
+              except Exception:
+                  pass
+
+              if not selected:
+                  try:
+                      locator = page.get_by_text(level, exact=True)
+
+                      if await locator.count() > 0:
+                          await locator.first.click(timeout=7000)
+                          selected = True
+                          print(f"Selected {level} by clicking visible text.")
+                  except Exception as e:
+                      print(f"Could not click level text {level}: {e}")
+
+              if not selected:
+                  try:
+                      locator = page.get_by_text(level, exact=False)
+
+                      if await locator.count() > 0:
+                          await locator.first.click(timeout=7000)
+                          selected = True
+                          print(f"Selected {level} by clicking partial text.")
+                  except Exception as e:
+                      print(f"Could not click partial level text {level}: {e}")
+
+              await page.wait_for_timeout(4000)
+
+              try:
+                  await page.wait_for_load_state("networkidle", timeout=30000)
+              except Exception:
+                  pass
+
+              return selected
+
+          async def get_rendered_page(context, url):
+              page = await context.new_page()
 
               await page.goto(
                   url,
@@ -98,7 +163,7 @@ jobs:
                   timeout=60000
               )
 
-              await page.wait_for_timeout(5000)
+              await page.wait_for_timeout(4000)
 
               text = await page.locator("body").inner_text(timeout=30000)
 
@@ -113,84 +178,129 @@ jobs:
 
               return title, text, links
 
-          async def crawl_site():
-              visited = set()
-              queue = [clean_url(u) for u in START_URLS]
-              pages = []
-              crawl_log = []
+          async def discover_level_links(browser, level):
+              context = await browser.new_context()
+              page = await context.new_page()
 
-              async with async_playwright() as p:
-                  browser = await p.chromium.launch(headless=True)
+              links = []
+              selected = False
+              home_text = ""
 
-                  while queue and len(pages) < MAX_PAGES:
-                      url = clean_url(queue.pop(0))
-
-                      if url in visited:
-                          continue
-
-                      visited.add(url)
-
-                      try:
-                          print("Opening with browser:", url)
-                          title, text, links = await get_rendered_page(browser, url)
-
-                      except Exception as e:
-                          msg = f"Failed to open {url}: {e}"
-                          print(msg)
-                          crawl_log.append(msg)
-                          continue
-
-                      text = text.strip()
-                      text = re.sub(r"\n{3,}", "\n\n", text)
-                      text = re.sub(r"[ \t]{2,}", " ", text)
-
-                      msg = f"Extracted {len(text)} characters from {url}"
-                      print(msg)
-                      crawl_log.append(msg)
-
-                      if len(text) > 100:
-                          pages.append({
-                              "title": title,
-                              "url": url,
-                              "text": text[:12000]
-                          })
-                      else:
-                          print("Skipped because text was too short:", url)
-
-                      for link in links:
-                          link = clean_url(urljoin(url, link))
-
-                          if (
-                              is_internal(link)
-                              and useful_url(link)
-                              and link not in visited
-                              and link not in queue
-                          ):
-                              queue.append(link)
-
-                      await asyncio.sleep(0.5)
-
-                  await browser.close()
-
-              with open("data/crawl_log.json", "w", encoding="utf-8") as f:
-                  json.dump(crawl_log, f, ensure_ascii=False, indent=2)
-
-              with open("data/source_pages.json", "w", encoding="utf-8") as f:
-                  json.dump(
-                      [
-                          {
-                              "title": p["title"],
-                              "url": p["url"],
-                              "text_length": len(p["text"])
-                          }
-                          for p in pages
-                      ],
-                      f,
-                      ensure_ascii=False,
-                      indent=2
+              try:
+                  await page.goto(
+                      HOME_URL,
+                      wait_until="networkidle",
+                      timeout=60000
                   )
 
-              return pages
+                  await page.wait_for_timeout(4000)
+
+                  selected = await select_clinical_level(page, level)
+
+                  home_text = await page.locator("body").inner_text(timeout=30000)
+
+                  links = await page.eval_on_selector_all(
+                      "a[href]",
+                      "els => els.map(a => a.href)"
+                  )
+
+              except Exception as e:
+                  print(f"Failed to discover links for {level}: {e}")
+
+              await page.close()
+
+              return context, selected, home_text, links
+
+          async def crawl_for_level(browser, level):
+              context, selected, home_text, starting_links = await discover_level_links(browser, level)
+
+              crawl_log = []
+              source_pages = []
+
+              crawl_log.append({
+                  "clinical_level": level,
+                  "selected_level_successfully": selected,
+                  "home_text_length": len(home_text)
+              })
+
+              queue = []
+
+              for link in starting_links:
+                  link = clean_url(urljoin(HOME_URL, link))
+
+                  if is_internal(link) and useful_url(link):
+                      queue.append(link)
+
+              extra_seed_urls = [
+                  "https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p"
+              ]
+
+              for seed in extra_seed_urls:
+                  if seed not in queue:
+                      queue.append(seed)
+
+              visited = set()
+              pages = []
+
+              while queue and len(pages) < MAX_PAGES_PER_LEVEL:
+                  url = clean_url(queue.pop(0))
+
+                  if url in visited:
+                      continue
+
+                  visited.add(url)
+
+                  try:
+                      print(f"[{level}] Opening: {url}")
+                      title, text, links = await get_rendered_page(context, url)
+
+                  except Exception as e:
+                      msg = f"[{level}] Failed to open {url}: {e}"
+                      print(msg)
+                      crawl_log.append(msg)
+                      continue
+
+                  text = text.strip()
+                  text = re.sub(r"\n{3,}", "\n\n", text)
+                  text = re.sub(r"[ \t]{2,}", " ", text)
+
+                  msg = f"[{level}] Extracted {len(text)} characters from {url}"
+                  print(msg)
+                  crawl_log.append(msg)
+
+                  if len(text) > 300 and not is_home_or_low_value_page(url):
+                      page_record = {
+                          "clinical_level": level,
+                          "title": title,
+                          "url": url,
+                          "text": text[:12000]
+                      }
+
+                      pages.append(page_record)
+
+                      source_pages.append({
+                          "clinical_level": level,
+                          "title": title,
+                          "url": url,
+                          "text_length": len(text)
+                      })
+
+                  for link in links:
+                      link = clean_url(urljoin(url, link))
+
+                      if (
+                          is_internal(link)
+                          and useful_url(link)
+                          and link not in visited
+                          and link not in queue
+                      ):
+                          queue.append(link)
+
+                  await asyncio.sleep(0.4)
+
+              await context.close()
+
+              return pages, crawl_log, source_pages
 
           def extract_json(text):
               text = text.strip()
@@ -240,14 +350,21 @@ jobs:
               return data["candidates"][0]["content"]["parts"][0]["text"]
 
           def generate_from_page(page):
+              clinical_level = page["clinical_level"]
+
               prompt = f"""
           Create quiz questions for undergraduate paramedicine revision.
+
+          The selected clinical level is:
+          {clinical_level}
 
           Use ONLY the source text below.
           Do not use outside knowledge.
           Do not infer anything not explicitly stated.
           Do not provide clinical advice.
           Do not create questions about facts not present in the source text.
+          Do not create questions from general disclaimers, copyright statements, liability statements, navigation text, or website administrative content.
+          If the source text does not contain useful clinical revision content, return an empty JSON array: []
 
           Create exactly 4 questions:
           - 2 multiple choice questions
@@ -264,7 +381,8 @@ jobs:
             "options": ["option A", "option B", "option C", "option D"],
             "answer": "exact correct option text",
             "source": "source URL",
-            "source_title": "source title"
+            "source_title": "source title",
+            "clinical_level": "{clinical_level}"
           }}
 
           True/false JSON format:
@@ -274,7 +392,8 @@ jobs:
             "options": ["True", "False"],
             "answer": "True or False",
             "source": "source URL",
-            "source_title": "source title"
+            "source_title": "source title",
+            "clinical_level": "{clinical_level}"
           }}
 
           Source title:
@@ -289,20 +408,20 @@ jobs:
 
               for model in GEMINI_MODELS:
                   try:
-                      print(f"Trying Gemini model {model}")
+                      print(f"[{clinical_level}] Trying Gemini model {model}")
                       response_text = call_gemini(model, prompt)
                       items = extract_json(response_text)
 
                       if items:
-                          print(f"Model {model} produced {len(items)} questions.")
+                          print(f"[{clinical_level}] Model {model} produced {len(items)} questions.")
                           return items
 
                   except Exception as e:
-                      print(f"Model {model} failed: {e}")
+                      print(f"[{clinical_level}] Model {model} failed: {e}")
 
               return []
 
-          def clean_questions(items):
+          def clean_questions(items, clinical_level):
               cleaned = []
 
               for item in items:
@@ -346,29 +465,47 @@ jobs:
                       "options": options,
                       "answer": answer,
                       "source": source,
-                      "source_title": source_title
+                      "source_title": source_title,
+                      "clinical_level": clinical_level
                   })
 
               return cleaned
 
           async def main():
-              print("Starting browser-based crawl.")
-              pages = await crawl_site()
-              print(f"Crawled {len(pages)} usable pages.")
+              print("Starting level-aware browser-based crawl.")
 
+              all_pages = []
               all_questions = []
+              all_crawl_logs = []
+              all_source_pages = []
 
-              for i, page in enumerate(pages, start=1):
-                  print(f"Generating questions for page {i}/{len(pages)}: {page['url']}")
+              async with async_playwright() as p:
+                  browser = await p.chromium.launch(headless=True)
 
-                  raw = generate_from_page(page)
-                  valid = clean_questions(raw)
+                  for level in CLINICAL_LEVELS:
+                      print(f"Starting crawl for clinical level: {level}")
 
-                  print(f"Kept {len(valid)} valid questions.")
+                      pages, crawl_log, source_pages = await crawl_for_level(browser, level)
 
-                  all_questions.extend(valid)
+                      print(f"{level}: crawled {len(pages)} usable pages.")
 
-                  time.sleep(1)
+                      all_pages.extend(pages)
+                      all_crawl_logs.extend(crawl_log)
+                      all_source_pages.extend(source_pages)
+
+                      for i, page in enumerate(pages, start=1):
+                          print(f"[{level}] Generating questions for page {i}/{len(pages)}: {page['url']}")
+
+                          raw = generate_from_page(page)
+                          valid = clean_questions(raw, level)
+
+                          print(f"[{level}] Kept {len(valid)} valid questions.")
+
+                          all_questions.extend(valid)
+
+                          time.sleep(1)
+
+                  await browser.close()
 
               if not all_questions:
                   all_questions = [
@@ -377,16 +514,25 @@ jobs:
                           "type": "tf",
                           "options": ["True", "False"],
                           "answer": "True",
-                          "source": "https://clinical.saambulance.sa.gov.au/tabs/home",
-                          "source_title": "Fallback"
+                          "source": HOME_URL,
+                          "source_title": "Fallback",
+                          "clinical_level": "All"
                       }
                   ]
 
+              counts_by_level = {}
+
+              for question in all_questions:
+                  level = question.get("clinical_level", "Unknown")
+                  counts_by_level[level] = counts_by_level.get(level, 0) + 1
+
               metadata = {
                   "last_updated": datetime.now(timezone.utc).isoformat(),
-                  "starting_urls": START_URLS,
-                  "page_count": len(pages),
-                  "question_count": len(all_questions)
+                  "clinical_levels": CLINICAL_LEVELS,
+                  "max_pages_per_level": MAX_PAGES_PER_LEVEL,
+                  "page_count": len(all_pages),
+                  "question_count": len(all_questions),
+                  "question_count_by_level": counts_by_level
               }
 
               with open("data/questions.json", "w", encoding="utf-8") as f:
@@ -395,7 +541,13 @@ jobs:
               with open("data/metadata.json", "w", encoding="utf-8") as f:
                   json.dump(metadata, f, ensure_ascii=False, indent=2)
 
-              print(f"Saved {len(all_questions)} questions.")
+              with open("data/crawl_log.json", "w", encoding="utf-8") as f:
+                  json.dump(all_crawl_logs, f, ensure_ascii=False, indent=2)
+
+              with open("data/source_pages.json", "w", encoding="utf-8") as f:
+                  json.dump(all_source_pages, f, ensure_ascii=False, indent=2)
+
+              print(f"Saved {len(all_questions)} questions from {len(all_pages)} pages.")
 
           asyncio.run(main())
           PY
