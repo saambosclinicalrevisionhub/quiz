@@ -161,7 +161,7 @@
   <div class="container">
     <h1>SA Ambos Clinical Revision Hub</h1>
 
-    <div class="warning">
+    <div id="disclaimerBox" class="warning">
       <strong>Educational revision only.</strong><br>
       This quiz is AI-generated directly from content on the publicly available
       <a href="https://clinical.saambulance.sa.gov.au/tabs/home" target="_blank" rel="noopener">
@@ -200,6 +200,7 @@
     const levelSelect = document.getElementById("levelSelect");
     const newQuestionButton = document.getElementById("newQuestionButton");
     const questionBox = document.getElementById("questionBox");
+    const disclaimerBox = document.getElementById("disclaimerBox");
 
     function escapeHtml(text) {
       if (text === null || text === undefined) {
@@ -267,6 +268,13 @@
         questionBox.innerHTML =
           "<p class='status'>No questions are currently available for this clinical level. Please try again after the next quiz update.</p>";
         return;
+      }
+
+      /*
+        Hide the yellow disclaimer box once the first actual question is generated.
+      */
+      if (disclaimerBox) {
+        disclaimerBox.style.display = "none";
       }
 
       currentQuestion = filtered[Math.floor(Math.random() * filtered.length)];
