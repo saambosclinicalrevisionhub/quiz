@@ -1,13 +1,98 @@
 [
   {
-    "question": "The quiz generator ran, but no valid questions were produced.",
+    "question": "Who are the clinical practice guidelines, protocols, and tools primarily intended for use by?",
+    "type": "mcq",
+    "options": [
+      "The general public seeking health advice.",
+      "SA Ambulance Service (SAAS) clinicians when performing duties.",
+      "Students for academic research only.",
+      "Any user for medical treatment advice."
+    ],
+    "answer": "SA Ambulance Service (SAAS) clinicians when performing duties.",
+    "source": "https://clinical.saambulance.sa.gov.au/tabs/home",
+    "source_title": "Home | SA Ambulance Service"
+  },
+  {
+    "question": "For users other than SAAS clinicians, what is the content herein provided for?",
+    "type": "mcq",
+    "options": [
+      "To serve as health, medical, or treatment advice.",
+      "To guarantee accurate and complete information for any purpose.",
+      "Information purposes only.",
+      "To authorize reproduction of external website material."
+    ],
+    "answer": "Information purposes only.",
+    "source": "https://clinical.saambulance.sa.gov.au/tabs/home",
+    "source_title": "Home | SA Ambulance Service"
+  },
+  {
+    "question": "SA Ambulance Service (SAAS) accepts liability for the content of external websites linked from their platform.",
+    "type": "tf",
+    "options": [
+      "True",
+      "False"
+    ],
+    "answer": "False",
+    "source": "https://clinical.saambulance.sa.gov.au/tabs/home",
+    "source_title": "Home | SA Ambulance Service"
+  },
+  {
+    "question": "SA Ambulance Service (SAAS) endorses all external websites linked from their content.",
+    "type": "tf",
+    "options": [
+      "True",
+      "False"
+    ],
+    "answer": "False",
+    "source": "https://clinical.saambulance.sa.gov.au/tabs/home",
+    "source_title": "Home | SA Ambulance Service"
+  },
+  {
+    "question": "According to the provided text, what is the primary pathophysiological basis of Acute Cardiogenic Pulmonary Oedema (ACPO)?",
+    "type": "mcq",
+    "options": [
+      "Fluid gains",
+      "Fluid shifts",
+      "Decreased capillary hydrostatic pressure",
+      "High-protein fluid accumulation"
+    ],
+    "answer": "Fluid shifts",
+    "source": "https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p",
+    "source_title": "Acute Cardiogenic Pulmonary Oedema CPG-001-P | SA Ambulance Service"
+  },
+  {
+    "question": "Which of the following is NOT recommended in the prehospital management of Acute Cardiogenic Pulmonary Oedema (ACPO)?",
+    "type": "mcq",
+    "options": [
+      "Sublingual GTN",
+      "CPAP",
+      "Morphine",
+      "Attention to oxygenation"
+    ],
+    "answer": "Morphine",
+    "source": "https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p",
+    "source_title": "Acute Cardiogenic Pulmonary Oedema CPG-001-P | SA Ambulance Service"
+  },
+  {
+    "question": "Continuous ECG and manual blood pressure monitoring every 3 minutes is recommended during nitrate administration and must precede GTN administration.",
     "type": "tf",
     "options": [
       "True",
       "False"
     ],
     "answer": "True",
-    "source": "https://clinical.saambulance.sa.gov.au/tabs/home",
-    "source_title": "Fallback"
+    "source": "https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p",
+    "source_title": "Acute Cardiogenic Pulmonary Oedema CPG-001-P | SA Ambulance Service"
+  },
+  {
+    "question": "Most studies show that CPAP reduces mortality and the need for intubation in patients with Acute Cardiogenic Pulmonary Oedema (ACPO).",
+    "type": "tf",
+    "options": [
+      "True",
+      "False"
+    ],
+    "answer": "True",
+    "source": "https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p",
+    "source_title": "Acute Cardiogenic Pulmonary Oedema CPG-001-P | SA Ambulance Service"
   }
 ]
