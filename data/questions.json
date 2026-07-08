@@ -1,14 +1,13 @@
 [
   {
-    "question": "What colour is the sky on a clear day?",
-    "type": "mcq",
+    "question": "The quiz generator ran, but no valid questions were produced.",
+    "type": "tf",
     "options": [
-      "Blue",
-      "Green",
-      "Red",
-      "Yellow"
+      "True",
+      "False"
     ],
-    "answer": "Blue",
-    "source": "Test Question"
+    "answer": "True",
+    "source": "https://clinical.saambulance.sa.gov.au/tabs/home",
+    "source_title": "Fallback"
   }
 ]
