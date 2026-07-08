@@ -23,7 +23,8 @@ jobs:
 
       - name: Install Python packages
         run: |
-          pip install requests beautifulsoup4
+          pip install requests beautifulsoup4 playwright
+          python -m playwright install chromium
 
       - name: Generate quiz questions
         env:
@@ -34,10 +35,11 @@ jobs:
           import json
           import re
           import time
+          import asyncio
           import requests
-          from bs4 import BeautifulSoup
           from urllib.parse import urljoin, urlparse
           from datetime import datetime, timezone
+          from playwright.async_api import async_playwright
 
           DOMAIN = "clinical.saambulance.sa.gov.au"
 
@@ -46,7 +48,7 @@ jobs:
               "https://clinical.saambulance.sa.gov.au/tabs/home/cardiac/page/acute-cardiogenic-pulmonary-oedema-p"
           ]
 
-          MAX_PAGES = 40
+          MAX_PAGES = 20
 
           GEMINI_MODELS = [
               "gemini-2.5-flash",
@@ -68,40 +70,6 @@ jobs:
               parsed = urlparse(url)
               return parsed.netloc == DOMAIN
 
-          def html_to_text(html):
-              soup = BeautifulSoup(html, "html.parser")
-
-              for tag in soup(["script", "style", "nav", "footer", "header", "noscript"]):
-                  tag.decompose()
-
-              text = soup.get_text(separator="\n")
-              text = re.sub(r"\n{3,}", "\n\n", text)
-              text = re.sub(r"[ \t]{2,}", " ", text)
-
-              return text.strip()
-
-          def extract_links(html, base_url):
-              soup = BeautifulSoup(html, "html.parser")
-              found = set()
-
-              for link in soup.find_all("a", href=True):
-                  full = clean_url(urljoin(base_url, link["href"]))
-                  if is_internal(full):
-                      found.add(full)
-
-              relative_matches = re.findall(r"/tabs/home/[A-Za-z0-9_\-\/]+", html)
-              for match in relative_matches:
-                  found.add(clean_url(urljoin(base_url, match)))
-
-              absolute_matches = re.findall(
-                  r"https://clinical\.saambulance\.sa\.gov\.au/[A-Za-z0-9_\-\/\.\?\=\&%]+",
-                  html
-              )
-              for match in absolute_matches:
-                  found.add(clean_url(match))
-
-              return list(found)
-
           def useful_url(url):
               useful_parts = [
                   "/tabs/home",
@@ -121,67 +89,88 @@ jobs:
 
               return any(part in url for part in useful_parts)
 
-          def fetch(url):
-              response = requests.get(
-                  url,
-                  timeout=30,
-                  headers={
-                      "User-Agent": "SAAS Clinical Revision Quiz educational crawler"
-                  }
-              )
-              response.raise_for_status()
-              return response.text
+          async def get_rendered_page(browser, url):
+              page = await browser.new_page()
 
-          def crawl_site():
-              queue = [clean_url(u) for u in START_URLS]
+              await page.goto(
+                  url,
+                  wait_until="networkidle",
+                  timeout=60000
+              )
+
+              await page.wait_for_timeout(5000)
+
+              text = await page.locator("body").inner_text(timeout=30000)
+
+              links = await page.eval_on_selector_all(
+                  "a[href]",
+                  "els => els.map(a => a.href)"
+              )
+
+              title = await page.title()
+
+              await page.close()
+
+              return title, text, links
+
+          async def crawl_site():
               visited = set()
+              queue = [clean_url(u) for u in START_URLS]
               pages = []
               crawl_log = []
 
-              while queue and len(pages) < MAX_PAGES:
-                  url = clean_url(queue.pop(0))
+              async with async_playwright() as p:
+                  browser = await p.chromium.launch(headless=True)
 
-                  if url in visited:
-                      continue
+                  while queue and len(pages) < MAX_PAGES:
+                      url = clean_url(queue.pop(0))
 
-                  visited.add(url)
+                      if url in visited:
+                          continue
 
-                  try:
-                      print("Crawling:", url)
-                      html = fetch(url)
-                  except Exception as e:
-                      msg = f"Failed to crawl {url}: {e}"
+                      visited.add(url)
+
+                      try:
+                          print("Opening with browser:", url)
+                          title, text, links = await get_rendered_page(browser, url)
+
+                      except Exception as e:
+                          msg = f"Failed to open {url}: {e}"
+                          print(msg)
+                          crawl_log.append(msg)
+                          continue
+
+                      text = text.strip()
+                      text = re.sub(r"\n{3,}", "\n\n", text)
+                      text = re.sub(r"[ \t]{2,}", " ", text)
+
+                      msg = f"Extracted {len(text)} characters from {url}"
                       print(msg)
                       crawl_log.append(msg)
-                      continue
 
-                  soup = BeautifulSoup(html, "html.parser")
-                  title = soup.title.get_text(strip=True) if soup.title else url
-                  text = html_to_text(html)
+                      if len(text) > 100:
+                          pages.append({
+                              "title": title,
+                              "url": url,
+                              "text": text[:12000]
+                          })
+                      else:
+                          print("Skipped because text was too short:", url)
 
-                  msg = f"Extracted {len(text)} characters from {url}"
-                  print(msg)
-                  crawl_log.append(msg)
+                      for link in links:
+                          link = clean_url(urljoin(url, link))
 
-                  if len(text) > 50:
-                      pages.append({
-                          "title": title,
-                          "url": url,
-                          "text": text[:9000]
-                      })
+                          if (
+                              is_internal(link)
+                              and useful_url(link)
+                              and link not in visited
+                              and link not in queue
+                          ):
+                              queue.append(link)
 
-                  for link in extract_links(html, url):
-                      link = clean_url(link)
+                      await asyncio.sleep(0.5)
 
-                      if (
-                          is_internal(link)
-                          and link not in visited
-                          and link not in queue
-                          and useful_url(link)
-                      ):
-                          queue.append(link)
-
-                  time.sleep(0.3)
+                  await browser.close()
 
               with open("data/crawl_log.json", "w", encoding="utf-8") as f:
                   json.dump(crawl_log, f, ensure_ascii=False, indent=2)
@@ -362,46 +351,53 @@ jobs:
 
               return cleaned
 
-          print("Starting crawl.")
-          pages = crawl_site()
-          print(f"Crawled {len(pages)} usable pages.")
+          async def main():
+              print("Starting browser-based crawl.")
+              pages = await crawl_site()
+              print(f"Crawled {len(pages)} usable pages.")
 
-          all_questions = []
+              all_questions = []
 
-          for i, page in enumerate(pages, start=1):
-              print(f"Generating questions for page {i}/{len(pages)}: {page['url']}")
-              raw = generate_from_page(page)
-              valid = clean_questions(raw)
-              print(f"Kept {len(valid)} valid questions.")
-              all_questions.extend(valid)
-              time.sleep(1)
+              for i, page in enumerate(pages, start=1):
+                  print(f"Generating questions for page {i}/{len(pages)}: {page['url']}")
 
-          if not all_questions:
-              all_questions = [
-                  {
-                      "question": "The quiz generator ran, but no valid questions were produced.",
-                      "type": "tf",
-                      "options": ["True", "False"],
-                      "answer": "True",
-                      "source": "https://clinical.saambulance.sa.gov.au/tabs/home",
-                      "source_title": "Fallback"
-                  }
-              ]
+                  raw = generate_from_page(page)
+                  valid = clean_questions(raw)
 
-          metadata = {
-              "last_updated": datetime.now(timezone.utc).isoformat(),
-              "starting_urls": START_URLS,
-              "page_count": len(pages),
-              "question_count": len(all_questions)
-          }
+                  print(f"Kept {len(valid)} valid questions.")
 
-          with open("data/questions.json", "w", encoding="utf-8") as f:
-              json.dump(all_questions, f, ensure_ascii=False, indent=2)
+                  all_questions.extend(valid)
 
-          with open("data/metadata.json", "w", encoding="utf-8") as f:
-              json.dump(metadata, f, ensure_ascii=False, indent=2)
+                  time.sleep(1)
 
-          print(f"Saved {len(all_questions)} questions.")
+              if not all_questions:
+                  all_questions = [
+                      {
+                          "question": "The quiz generator ran, but no valid questions were produced.",
+                          "type": "tf",
+                          "options": ["True", "False"],
+                          "answer": "True",
+                          "source": "https://clinical.saambulance.sa.gov.au/tabs/home",
+                          "source_title": "Fallback"
+                      }
+                  ]
+
+              metadata = {
+                  "last_updated": datetime.now(timezone.utc).isoformat(),
+                  "starting_urls": START_URLS,
+                  "page_count": len(pages),
+                  "question_count": len(all_questions)
+              }
+
+              with open("data/questions.json", "w", encoding="utf-8") as f:
+                  json.dump(all_questions, f, ensure_ascii=False, indent=2)
+
+              with open("data/metadata.json", "w", encoding="utf-8") as f:
+                  json.dump(metadata, f, ensure_ascii=False, indent=2)
+
+              print(f"Saved {len(all_questions)} questions.")
+
+          asyncio.run(main())
           PY
 
           python generate_questions.py
