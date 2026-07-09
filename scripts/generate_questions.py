@@ -30,19 +30,13 @@ EXCLUDED_URL_PREFIXES = [
 ]
 
 CLINICAL_LEVELS = [
-    "Ambulance Assist",
-    "Ambulance Responder",
-    "Ambulance Officer",
-    "Ambulance Officer Extended Scope",
-    "Paramedic",
-    "Intensive Care Paramedic",
-    "Extended Care Paramedic"
+    "Paramedic"
 ]
 
-MAX_VISITED_URLS_PER_LEVEL = 150
-MAX_CONTENT_PAGES_PER_LEVEL = 75
-STOP_IF_NO_NEW_CONTENT_FOR = 50
-QUESTIONS_PER_PAGE = 4
+MAX_VISITED_URLS_PER_LEVEL = 40
+MAX_CONTENT_PAGES_PER_LEVEL = 8
+STOP_IF_NO_NEW_CONTENT_FOR = 12
+QUESTIONS_PER_PAGE = 3
 
 GEMINI_MODELS = [
     "gemini-2.5-flash",
@@ -962,7 +956,7 @@ def clean_questions(items, clinical_level, content_category):
 
 
 async def main():
-    print("Starting SAAS flow-aware dynamic crawl.")
+    print("Starting temporary Paramedic-only test crawl.")
 
     all_pages = []
     all_questions = []
@@ -1041,6 +1035,7 @@ async def main():
 
     metadata = {
         "last_updated": datetime.now(timezone.utc).isoformat(),
+        "temporary_test_mode": True,
         "clinical_levels": CLINICAL_LEVELS,
         "included_sources": {
             "clinical_practice_guidelines": HOME_URL,
