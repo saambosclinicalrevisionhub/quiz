@@ -2,7 +2,7 @@
 
 This repository powers the public SA Ambos Clinical Revision Hub website: https://saambosclinicalrevisionhub.github.io/quiz/
 
-Questions are generated from content on the publicly available SA Ambulance Service Clinical website: https://clinical.saambulance.sa.gov.au/
+Questions are AI generated from content on the publicly available SA Ambulance Service Clinical website: https://clinical.saambulance.sa.gov.au/
 
 ## Important disclaimer
 
