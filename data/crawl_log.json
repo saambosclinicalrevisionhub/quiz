@@ -3,7 +3,7 @@
     "clinicalLevel": "Paramedic",
     "selectedLevel": true,
     "incrementalParamedicTest": true,
-    "startedAt": "2026-07-09T06:52:50.552894+00:00",
+    "startedAt": "2026-07-09T07:28:00.961487+00:00",
     "visited": [
       "https://clinical.saambulance.sa.gov.au/tabs/home",
       "https://clinical.saambulance.sa.gov.au/tabs/medicines",
@@ -27,9 +27,7 @@
       "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
       "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte"
     ],
-    "unchangedPages": [],
-    "changedPages": [],
-    "newPages": [
+    "unchangedPages": [
       "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/adrenaline",
       "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone",
       "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
@@ -39,7 +37,9 @@
       "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
       "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte"
     ],
+    "changedPages": [],
+    "newPages": [],
     "errors": [],
-    "finishedAt": "2026-07-09T07:04:53.872851+00:00"
+    "finishedAt": "2026-07-09T07:40:02.948800+00:00"
   }
 ]

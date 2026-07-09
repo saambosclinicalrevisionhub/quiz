@@ -1,21 +1,16 @@
 {
-  "generatedAt": "2026-07-09T07:05:44.946509+00:00",
+  "generatedAt": "2026-07-09T07:40:29.508573+00:00",
   "mode": "incremental_paramedic_test",
   "clinicalLevels": [
     "Paramedic"
   ],
   "incrementalParamedicTest": true,
-  "questionCount": 15,
-  "sourceCount": 5,
-  "changedOrNewSourceCount": 8,
+  "questionCount": 24,
+  "sourceCount": 8,
+  "changedOrNewSourceCount": 3,
   "changedOrNewSourceKeys": [
-    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/adrenaline",
-    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone",
     "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
-    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/benzylpenicillin",
     "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
-    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ceftriaxone",
-    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
-    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte"
+    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam"
   ]
 }

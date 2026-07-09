@@ -62,5 +62,29 @@
     "error": null,
     "questionCount": 3,
     "updatedAt": "2026-07-09T07:05:44.911007+00:00"
+  },
+  {
+    "sourceKey": "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
+    "model": "gemini-2.5-flash",
+    "error": null,
+    "questionCount": 3,
+    "updatedAt": "2026-07-09T07:40:12.822918+00:00"
+  },
+  {
+    "sourceKey": "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
+    "model": "gemini-2.5-flash",
+    "error": null,
+    "questionCount": 3,
+    "updatedAt": "2026-07-09T07:40:21.546544+00:00"
+  },
+  {
+    "sourceKey": "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
+    "model": "gemini-2.5-flash",
+    "error": null,
+    "questionCount": 3,
+    "updatedAt": "2026-07-09T07:40:29.463160+00:00"
   }
 ]

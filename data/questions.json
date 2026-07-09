@@ -96,6 +96,54 @@
     "updatedAt": "2026-07-09T07:05:14.470669+00:00"
   },
   {
+    "question": "According to the SA Ambulance Service DMO-004 guideline, what is a primary indication for Aspirin administration by a Paramedic?",
+    "options": [
+      "Severe headache",
+      "Cardiac-related chest pain or discomfort / ACS",
+      "Minor sprains",
+      "Allergic reaction"
+    ],
+    "correctAnswer": "Cardiac-related chest pain or discomfort / ACS",
+    "explanation": "The SA Ambulance Service DMO-004 guideline explicitly lists 'Cardiac-related chest pain or discomfort / ACS' as an indication for Paramedics.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
+    "sourceTitle": "Aspirin DMO-004 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:12.823222+00:00"
+  },
+  {
+    "question": "Which of the following is a contraindication for Aspirin administration by a Paramedic, according to the SA Ambulance Service DMO-004 guideline?",
+    "options": [
+      "History of mild rash to aspirin",
+      "Patient has already taken aspirin earlier today",
+      "Severe active bleeding",
+      "Onset of action approximately 10 minutes"
+    ],
+    "correctAnswer": "Severe active bleeding",
+    "explanation": "The guideline states that Aspirin is contraindicated in 'severe active bleeding'. A history of hypersensitivity (i.e. rash) may still allow administration if the benefit in ACS is considered, and it is safe if the patient has already taken aspirin earlier.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
+    "sourceTitle": "Aspirin DMO-004 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:12.823229+00:00"
+  },
+  {
+    "question": "According to the SA Ambulance Service DMO-004 guideline, which of the following is a common adverse effect of Aspirin?",
+    "options": [
+      "Decreased bleeding time",
+      "Severe allergic reaction",
+      "GIT irritation",
+      "Onset of action within 1 minute"
+    ],
+    "correctAnswer": "GIT irritation",
+    "explanation": "The guideline lists 'Common adverse effects include GIT irritation and increased bleeding time.' Onset of action is approximately 10 minutes, not 1 minute.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
+    "sourceTitle": "Aspirin DMO-004 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:12.823232+00:00"
+  },
+  {
     "question": "According to the SA Ambulance Service guidelines, what is the primary indication for paramedics to administer benzylpenicillin?",
     "options": [
       "Suspected pneumonia",
@@ -144,6 +192,54 @@
     "updatedAt": "2026-07-09T07:05:23.170748+00:00"
   },
   {
+    "question": "For which of the following indications is Carbetocin appropriate for a Paramedic to administer?",
+    "options": [
+      "First stage labour",
+      "Prior to delivery of all fetuses",
+      "Primary Postpartum Haemorrhage (PPH)",
+      "Second stage labour"
+    ],
+    "correctAnswer": "Primary Postpartum Haemorrhage (PPH)",
+    "explanation": "The source states Carbetocin is indicated for Primary PPH and modified active third stage management post-delivery, but *not* prior to delivery of all fetuses or in first/second stage labour.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
+    "sourceTitle": "Carbetocin DMO-040 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:21.546828+00:00"
+  },
+  {
+    "question": "A Paramedic is considering administering Carbetocin. Which of the following patient factors represents a contraindication?",
+    "options": [
+      "Patient with a history of pre-eclampsia",
+      "Patient is 18 years old",
+      "Patient has an unknown number of fetuses",
+      "Patient with a history of asthma"
+    ],
+    "correctAnswer": "Patient has an unknown number of fetuses",
+    "explanation": "The source lists 'Unknown number of fetus or unclear ante-natal care' as a contraindication. Pre-eclampsia and asthma are precautions, and the age contraindication is for patients <16 years old.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
+    "sourceTitle": "Carbetocin DMO-040 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:21.546834+00:00"
+  },
+  {
+    "question": "According to the SA Ambulance Service guidelines, what is a key characteristic of Carbetocin administration or action?",
+    "options": [
+      "It requires dilution for intramuscular (IM) administration.",
+      "It can be given as multiple doses if required.",
+      "It provides sustained uterine contractions for approximately 11 minutes immediately after administration.",
+      "It is contraindicated in patients with a history of migraine."
+    ],
+    "correctAnswer": "It provides sustained uterine contractions for approximately 11 minutes immediately after administration.",
+    "explanation": "The source states 'Immediate effect: sustained uterine contractions for approx. 11 minutes'. It also notes 'Nil dilution required for IM administration' and 'Carbetocin is a single dose only'. Migraine is listed as a precaution, not a contraindication.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
+    "sourceTitle": "Carbetocin DMO-040 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:21.546837+00:00"
+  },
+  {
     "question": "According to the SA Ambulance Service DMO-041 guideline, which of the following is a contraindication for Ceftriaxone administration?",
     "options": [
       "History of type 1 (immediate) hypersensitivity to penicillin",
@@ -190,6 +286,54 @@
     "sourceTitle": "Ceftriaxone DMO-041 | SA Ambulance Service",
     "sourceType": "Medicine",
     "updatedAt": "2026-07-09T07:05:34.793178+00:00"
+  },
+  {
+    "question": "According to SA Ambulance Service guidelines, which of the following is an indication for Clonazepam in palliative care?",
+    "options": [
+      "Acute severe pain management",
+      "Nausea and vomiting refractory to antiemetics",
+      "Anxiety",
+      "Status epilepticus"
+    ],
+    "correctAnswer": "Anxiety",
+    "explanation": "The source text explicitly states 'Palliative care anxiety' as an indication for Clonazepam.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
+    "sourceTitle": "Clonazepam DMO-032 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:29.463471+00:00"
+  },
+  {
+    "question": "When administering Clonazepam, how should the dosage be written according to SA Ambulance Service guidelines?",
+    "options": [
+      "In milligrams (mg)",
+      "In millilitres (mL)",
+      "In drops",
+      "In units"
+    ],
+    "correctAnswer": "In drops",
+    "explanation": "The guidelines state, 'Dosage must be written in drops rather than mg (each drop is 0.1 mg).'",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
+    "sourceTitle": "Clonazepam DMO-032 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:29.463479+00:00"
+  },
+  {
+    "question": "Which of the following patient factors requires cautionary use of Clonazepam according to SA Ambulance Service guidelines?",
+    "options": [
+      "History of mild hypertension",
+      "Known allergy to penicillin",
+      "Respiratory depression or reduced respiratory drive",
+      "Mild headache"
+    ],
+    "correctAnswer": "Respiratory depression or reduced respiratory drive",
+    "explanation": "The guidelines advise 'Cautionary use in patient with respiratory depression or reduced respiratory drive (disease, sleep apnea).'",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
+    "sourceTitle": "Clonazepam DMO-032 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:29.463482+00:00"
   },
   {
     "question": "What is the primary indication for Cophenylcaine nasal spray according to SA Ambulance Service guidelines?",
