@@ -71,7 +71,6 @@ def load_json(path, default):
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
-
     except Exception:
         return default
 
@@ -385,3 +384,66 @@ async def click_level_on_select_page(page, level):
 
 async def prepare_site_for_level(page, level):
     await page.goto(ROOT_URL, wait_until="networkidle", timeout=60000)
+    await page.wait_for_timeout(3000)
+
+    await click_disclaimer_ok_if_present(page)
+    await page.wait_for_timeout(3000)
+
+    try:
+        body_text = await page.locator("body").inner_text(timeout=30000)
+    except Exception:
+        body_text = ""
+
+    selected = False
+
+    if "select your level" in body_text.lower() or level in body_text:
+        selected = await click_level_on_select_page(page, level)
+
+    if not selected:
+        try:
+            await page.goto(HOME_URL, wait_until="networkidle", timeout=60000)
+            await page.wait_for_timeout(3000)
+
+            await click_disclaimer_ok_if_present(page)
+            await page.wait_for_timeout(2000)
+
+            body_text = await page.locator("body").inner_text(timeout=30000)
+
+            if "select your level" in body_text.lower() or level in body_text:
+                selected = await click_level_on_select_page(page, level)
+
+        except Exception as error:
+            print(f"Could not navigate to level screen for {level}: {error}")
+
+    await page.wait_for_timeout(4000)
+
+    try:
+        await page.wait_for_load_state("networkidle", timeout=30000)
+    except Exception:
+        pass
+
+    return selected
+
+
+async def prepare_current_page_if_needed(page, level):
+    try:
+        await click_disclaimer_ok_if_present(page)
+
+        body_text = await page.locator("body").inner_text(timeout=30000)
+
+        if "select your level" in body_text.lower():
+            await click_level_on_select_page(page, level)
+
+    except Exception:
+        pass
+
+
+async def collect_basic_links(page, base_url):
+    urls = set()
+
+    try:
+        links = await page.eval_on_selector_all(
+            "a[href]",
+            "els => els.map(a => a.href)"
+        )
+
