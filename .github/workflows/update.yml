@@ -5,47 +5,46 @@ on:
     - cron: "0 18 * * *"
   workflow_dispatch:
 
-permissions:
+permission*:
   contents: write
 
 jobs:
-  update-quiz:
+  updat*-quiz:
     runs-on: ubuntu-latest
+*   timeout-minutes: 90
 
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+    steps:*      - name: Check out repository*        uses: actions/checkout@v4
+*      - name: Set up Python
+      * uses: actions/setup-python@v5
+   *    with:
+          python-version* "3.11"
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install Python packages
+      - name: Install Pyt*on packages
         run: |
-          pip install requests playwright
-          python -m playwright install --with-deps chromium
+       *  pip install requests playwright
+*         python -m playwright inst*ll --with-deps chromium
 
-      - name: Generate quiz questions
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          cat > generate_questions.py << 'PY'
-          import os
+      - n*me: Generate quiz questions
+      * env:
+          GEMINI_API_KEY: ${* secrets.GEMINI_API_KEY }}
+       *run: |
+          cat > generate_qu*stions.py << 'PY'
+          import*os
           import json
-          import re
+         *import re
           import time
-          import asyncio
-          import requests
-          from urllib.parse import urljoin, urlparse
-          from datetime import datetime, timezone
-          from playwright.async_api import async_playwright
+  *       import asyncio
+          im*ort requests
+          from urllib*parse import urljoin, urlparse
+   *      from datetime import datetim*, timezone
+          from playwrig*t.async_api import async_playwrigh*
 
-          DOMAIN = "clinical.saambulance.sa.gov.au"
+          DOMAIN = "clinical.saa*bulance.sa.gov.au"
 
-          HOME_URL = "https://clinical.saambulance.sa.gov.au/tabs/home"
-          MEDICINES_URL = "https://clinical.saambulance.sa.gov.au/tabs/medicines"
-          CALCULATORS_URL = "https://clinical.saambulance.sa.gov.au/tabs/calculators"
+          ROOT*URL = "https://clinical.saambulance.sa.gov.au"
+          HOME_URL = "*ttps://clinical.saambulance.sa.gov.au/tabs/home"
+          MEDICINES_*RL = "https://clinical.saambulance.sa.gov.au/tabs/medicines"
+        * CALCULATORS_URL = "https://clinical.saambulance.sa.gov.au/tabs/calculators"
 
           START_URLS = [
               HOME_URL,
@@ -53,12 +52,13 @@ jobs:
               CALCULATORS_URL
           ]
 
-          EXCLUDED_URL_PREFIXES = [
+          *XCLUDED_URL_PREFIXES = [
               "https://clinical.saambulance.sa.gov.au/tabs/checklists",
-              "https://clinical.saambulance.sa.gov.au/tabs/checklists/cppro-s"
+              "https://clinical.saambulance.sa.gov.au/tabs/checklists/cppro-s",
+              "https://clinical.saambulance.sa.gov.au/tabs/tools"
           ]
 
-          CLINICAL_LEVELS = [
+          CLINICAL_LEVE*S = [
               "Ambulance Assist",
               "Ambulance Responder",
               "Ambulance Officer",
@@ -68,87 +68,92 @@ jobs:
               "Extended Care Paramedic"
           ]
 
-          MAX_PAGES_PER_LEVEL = 150
-          STOP_IF_NO_NEW_CONTENT_FOR = 40
-          QUESTIONS_PER_PAGE = 4
+          MAX_VISITED_URLS_PER*LEVEL = 150
+          MAX_CONTENT_*AGES_PER_LEVEL = 75
+          STOP*IF_NO_NEW_CONTENT_FOR = 50
+       *  QUESTIONS_PER_PAGE = 4
 
-          GEMINI_MODELS = [
+        * GEMINI_MODELS = [
               "gemini-2.5-flash",
               "gemini-2.0-flash",
               "gemini-1.5-flash"
           ]
 
-          api_key = os.environ.get("GEMINI_API_KEY")
+      *   api_key = os.environ.get("GEMIN*_API_KEY")
 
-          if not api_key:
-              raise RuntimeError("GEMINI_API_KEY is missing.")
+          if not api_k*y:
+              raise RuntimeErro*("GEMINI_API_KEY is missing.")
 
-          os.makedirs("data", exist_ok=True)
+  *       os.makedirs("data", exist_o*=True)
 
-          def clean_url(url):
-              return url.split("#")[0].rstrip("/")
+          def clean_url(ur*):
+              if not url:
+     *            return ""
+            * return url.split("#")[0].rstrip("*")
 
-          def is_internal(url):
-              parsed = urlparse(url)
-              return parsed.netloc == DOMAIN
+          def is_internal(url)*
+              parsed = urlparse(u*l)
+              return parsed.net*oc == DOMAIN
 
-          def is_excluded_url(url):
-              cleaned = clean_url(url)
+          def is_exc*uded_url(url):
+              clean*d = clean_url(url)
 
-              for prefix in EXCLUDED_URL_PREFIXES:
-                  if cleaned.startswith(prefix):
-                      return True
+              *or prefix in EXCLUDED_URL_PREFIXES*
+                  if cleaned.star*swith(prefix):
+                   *  return True
 
-              return False
+              retur* False
 
-          def is_allowed_site_area(url):
-              cleaned = clean_url(url)
+          def is_allowed_s*te_area(url):
+              cleane* = clean_url(url)
 
-              if is_excluded_url(cleaned):
-                  return False
+              i* not is_internal(cleaned):
+       *          return False
 
-              allowed_prefixes = [
+          *   if is_excluded_url(cleaned):
+  *               return False
+
+     *        allowed_prefixes = [
+                  HOME_URL,
+                  MEDICINES_URL,
+                  CALCULATORS_URL
+              ]*
+              return any(cleaned.*tartswith(prefix) for prefix in al*owed_prefixes)
+
+          def cate*orise_url(url):
+              clea*ed = clean_url(url)
+
+             *if cleaned.startswith(MEDICINES_UR*):
+                  return "Medic*ne"
+
+              if cleaned.star*swith(CALCULATORS_URL):
+          *       return "Calculator"
+
+      *       if cleaned.startswith(HOME_*RL):
+                  return "Cli*ical Practice Guideline"
+
+        *     return "Other"
+
+          def*is_index_page(url):
+              *leaned = clean_url(url)
+
+         *    index_urls = [
                   HOME_URL,
                   MEDICINES_URL,
                   CALCULATORS_URL
               ]
 
-              return any(cleaned.startswith(prefix) for prefix in allowed_prefixes)
+        *     return cleaned in index_urls
+*          def is_detail_content_pa*e(url):
+              cleaned = cl*an_url(url)
 
-          def is_home_or_disclaimer_page(url):
-              cleaned = clean_url(url)
-              return cleaned == HOME_URL
+              if not *s_allowed_site_area(cleaned):
+    *             return False
 
-          def categorise_url(url):
-              cleaned = clean_url(url)
+       *      if is_index_page(cleaned):
+ *                return False
 
-              if cleaned.startswith(MEDICINES_URL):
-                  return "Medicine"
-
-              if cleaned.startswith(CALCULATORS_URL):
-                  return "Calculator"
-
-              if cleaned.startswith(HOME_URL):
-                  return "Clinical Practice Guideline"
-
-              return "Other"
-
-          def is_detail_content_page(url):
-              cleaned = clean_url(url)
-
-              if is_excluded_url(cleaned):
-                  return False
-
-              if cleaned == HOME_URL:
-                  return False
-
-              if cleaned == MEDICINES_URL:
-                  return False
-
-              if cleaned == CALCULATORS_URL:
-                  return False
-
-              if cleaned.startswith(HOME_URL) and "/page/" in cleaned:
+    *         if cleaned.startswith(HOM*_URL) and "/page/" in cleaned:
                   return True
 
               if cleaned.startswith(MEDICINES_URL + "/"):
@@ -160,13 +165,29 @@ jobs:
               return False
 
           def useful_url(url):
-              if not is_internal(url):
+              if not url:
                   return False
 
-              if is_excluded_url(url):
+              cleaned = clean_url(url)
+
+              if not is_internal(cleaned):
                   return False
 
-              if not is_allowed_site_area(url):
+              if is_excluded_url(cleaned):
+                  return False
+
+              if not is_allowed_site_area(cleaned):
+                  return False
+
+              bad_parts = [
+                  "/tabs/checklists",
+                  "/cppro",
+                  "/favourites",
+                  "/favorites",
+                  "/recent"
+              ]
+
+              if any(part in cleaned.lower() for part in bad_parts):
                   return False
 
               return True
@@ -193,31 +214,31 @@ jobs:
           def looks_like_real_content(text):
               lowered = text.lower()
 
-              content_terms = [
+              strong_terms = [
                   "principle",
                   "principles",
                   "guideline",
-                  "clinical",
                   "indications",
                   "contraindications",
                   "management",
+                  "assessment",
                   "treatment",
                   "dose",
+                  "dosing",
                   "administration",
                   "precautions",
-                  "assessment",
-                  "procedure",
-                  "calculation",
-                  "calculator",
+                  "clinical",
                   "medicine",
-                  "pharmacology"
+                  "calculator",
+                  "calculation",
+                  "procedure",
+                  "considerations"
               ]
 
-              return any(term in lowered for term in content_terms)
+              return any(term in lowered for term in strong_terms)
 
           def extract_urls_from_text_and_html(text, html, base_url):
               found = set()
-
               combined = text + "\n" + html
 
               absolute_matches = re.findall(
@@ -226,7 +247,9 @@ jobs:
               )
 
               for match in absolute_matches:
-                  found.add(clean_url(match))
+                  url = clean_url(match)
+                  if useful_url(url):
+                      found.add(url)
 
               relative_matches = re.findall(
                   r"/tabs/[A-Za-z0-9_\-\/\.\?\=\&%]+",
@@ -234,50 +257,114 @@ jobs:
               )
 
               for match in relative_matches:
-                  found.add(clean_url(urljoin(base_url, match)))
+                  url = clean_url(urljoin(base_url, match))
+                  if useful_url(url):
+                      found.add(url)
 
               return found
 
-          async def select_clinical_level(page, level):
+          async def click_disclaimer_ok_if_present(page):
+              clicked = False
+
+              possible_ok_texts = [
+                  "OK",
+                  "Ok",
+                  "I agree",
+                  "Agree",
+                  "Accept",
+                  "Continue"
+              ]
+
+              for text in possible_ok_texts:
+                  try:
+                      locator = page.get_by_text(text, exact=True)
+
+                      if await locator.count() > 0:
+                          await locator.first.click(timeout=5000)
+                          await page.wait_for_timeout(2500)
+                          clicked = True
+                          print(f"Clicked disclaimer button: {text}")
+                          break
+
+                  except Exception:
+                      pass
+
+              if not clicked:
+                  try:
+                      buttons = await page.locator("button").all()
+
+                      for button in buttons:
+                          label = ""
+                          try:
+                              label = await button.inner_text(timeout=1000)
+                          except Exception:
+                              label = ""
+
+                          if label.strip().lower() in ["ok", "agree", "accept", "continue"]:
+                              await button.click(timeout=5000)
+                              await page.wait_for_timeout(2500)
+                              clicked = True
+                              print(f"Clicked disclaimer button by button scan: {label}")
+                              break
+
+                  except Exception:
+                      pass
+
+              return clicked
+
+          async def click_level_on_select_page(page, level):
               selected = False
 
-              print(f"Trying to select clinical level: {level}")
+              print(f"Trying to select level from Select your level page: {level}")
 
               try:
-                  selectors = await page.locator("select").all()
+                  await page.wait_for_timeout(1500)
 
-                  for selector in selectors:
-                      try:
-                          await selector.select_option(label=level, timeout=3000)
-                          selected = True
-                          print(f"Selected {level} using dropdown label.")
-                          break
-                      except Exception:
-                          pass
-              except Exception:
-                  pass
+                  exact_locator = page.get_by_text(level, exact=True)
 
-              if not selected:
-                  try:
-                      locator = page.get_by_text(level, exact=True)
+                  if await exact_locator.count() > 0:
+                      await exact_locator.first.click(timeout=7000)
+                      selected = True
+                      print(f"Selected clinical level by exact text: {level}")
 
-                      if await locator.count() > 0:
-                          await locator.first.click(timeout=7000)
-                          selected = True
-                          print(f"Selected {level} by clicking exact visible text.")
-                  except Exception as e:
-                      print(f"Could not click exact level text {level}: {e}")
+              except Exception as e:
+                  print(f"Could not click exact level text {level}: {e}")
 
               if not selected:
                   try:
-                      locator = page.get_by_text(level, exact=False)
+                      partial_locator = page.get_by_text(level, exact=False)
 
-                      if await locator.count() > 0:
-                          await locator.first.click(timeout=7000)
+                      if await partial_locator.count() > 0:
+                          await partial_locator.first.click(timeout=7000)
                           selected = True
-                          print(f"Selected {level} by clicking partial visible text.")
+                          print(f"Selected clinical level by partial text: {level}")
+
                   except Exception as e:
                       print(f"Could not click partial level text {level}: {e}")
+
+              if not selected:
+                  try:
+                      all_buttons = await page.locator("button, [role=button], ion-item, mat-list-item, div, span").all()
+
+                      for element in all_buttons[:150]:
+                          try:
+                              if not await element.is_visible(timeout=500):
+                                  continue
+
+                              label = await element.inner_text(timeout=1000)
+                              label = re.sub(r"\s+", " ", label).strip()
+
+                              if label == level:
+                                  await element.click(timeout=7000)
+                                  selected = True
+                                  print(f"Selected clinical level by generic visible element: {level}")
+                                  break
+
+                          except Exception:
+                              continue
+
+                  except Exception:
+                      pass
 
               await page.wait_for_timeout(4000)
 
@@ -287,6 +374,217 @@ jobs:
                   pass
 
               return selected
+
+          async def prepare_site_for_level(page, level):
+              """
+              Handles the real SAAS flow:
+              1. Open site.
+              2. Click OK on disclaimer.
+              3. Select clinical level.
+              4. Wait for guidelines/categories to load.
+              """
+
+              await page.goto(ROOT_URL, wait_until="networkidle", timeout=60000)
+              await page.wait_for_timeout(3000)
+
+              await click_disclaimer_ok_if_present(page)
+
+              await page.wait_for_timeout(3000)
+
+              body_text = ""
+              try:
+                  body_text = await page.locator("body").inner_text(timeout=30000)
+              except Exception:
+                  body_text = ""
+
+              selected = False
+
+              if "select your level" in body_text.lower() or level in body_text:
+                  selected = await click_level_on_select_page(page, level)
+              else:
+                  try:
+                      await page.goto(HOME_URL, wait_until="networkidle", timeout=60000)
+                      await page.wait_for_timeout(3000)
+                      await click_disclaimer_ok_if_present(page)
+
+                      body_text = await page.locator("body").inner_text(timeout=30000)
+
+                      if "select your level" in body_text.lower() or level in body_text:
+                          selected = await click_level_on_select_page(page, level)
+
+                  except Exception as e:
+                      print(f"Could not navigate to level screen for {level}: {e}")
+
+              await page.wait_for_timeout(4000)
+
+              try:
+                  await page.wait_for_load_state("networkidle", timeout=30000)
+              except Exception:
+                  pass
+
+              return selected
+
+          async def prepare_current_page_if_needed(page, level):
+              try:
+                  await click_disclaimer_ok_if_present(page)
+
+                  body_text = await page.locator("body").inner_text(timeout=30000)
+
+                  if "select your level" in body_text.lower():
+                      await click_level_on_select_page(page, level)
+
+              except Exception:
+                  pass
+
+          async def collect_basic_links(page, base_url):
+              urls = set()
+
+              try:
+                  links = await page.eval_on_selector_all(
+                      "a[href]",
+                      "els => els.map(a => a.href)"
+                  )
+
+                  for link in links:
+                      url = clean_url(urljoin(base_url, link))
+
+                      if useful_url(url):
+                          urls.add(url)
+              except Exception:
+                  pass
+
+              try:
+                  html = await page.content()
+                  text = await page.locator("body").inner_text(timeout=30000)
+
+                  for url in extract_urls_from_text_and_html(text, html, base_url):
+                      if useful_url(url):
+                          urls.add(url)
+              except Exception:
+                  pass
+
+              return urls
+
+          async def collect_clickable_routes(context, url, level):
+              discovered = set()
+              clicked_labels = []
+
+              page = await context.new_page()
+
+              try:
+                  await page.goto(url, wait_until="networkidle", timeout=60000)
+                  await page.wait_for_timeout(3000)
+
+                  await prepare_current_page_if_needed(page, level)
+
+                  await page.wait_for_timeout(2500)
+
+                  base_url = page.url
+
+                  basic_links = await collect_basic_links(page, base_url)
+
+                  for link in basic_links:
+                      discovered.add(link)
+
+                  candidate_selector = (
+                      "a, button, [role=button], [role=link], "
+                      "ion-card, ion-item, mat-card, .card, .tile, "
+                      "[class*=card], [class*=tile], [class*=item], "
+                      "div, span"
+                  )
+
+                  candidates = await page.locator(candidate_selector).all()
+
+                  max_candidates = min(len(candidates), 120)
+
+                  for i in range(max_candidates):
+                      try:
+                          element = candidates[i]
+
+                          if not await element.is_visible(timeout=700):
+                              continue
+
+                          label = await element.inner_text(timeout=1000)
+                          label = re.sub(r"\s+", " ", label).strip()
+
+                          if not label:
+                              continue
+
+                          if len(label) > 120:
+                              continue
+
+                          lower_label = label.lower()
+
+                          skip_label_terms = [
+                              "select your level",
+                              "set your clinical level",
+                              "if you are switching",
+                              "educational revision",
+                              "disclaimer",
+                              "ok",
+                              "level",
+                              "recent",
+                              "favourites",
+                              "favorites",
+                              "tools",
+                              "checklists",
+                              "cppro",
+                              "search"
+                          ]
+
+                          if any(term in lower_label for term in skip_label_terms):
+                              continue
+
+                          before_url = clean_url(page.url)
+
+                          await element.click(timeout=5000)
+                          await page.wait_for_timeout(2000)
+
+                          try:
+                              await page.wait_for_load_state("networkidle", timeout=10000)
+                          except Exception:
+                              pass
+
+                          await prepare_current_page_if_needed(page, level)
+
+                          after_url = clean_url(page.url)
+
+                          if useful_url(after_url) and after_url != before_url:
+                              discovered.add(after_url)
+                              clicked_labels.append({
+                                  "clinical_level": level,
+                                  "from": url,
+                                  "label": label[:120],
+                                  "to": after_url
+                              })
+
+                          more_links = await collect_basic_links(page, after_url)
+
+                          for link in more_links:
+                              discovered.add(link)
+
+                          await page.goto(url, wait_until="networkidle", timeout=60000)
+                          await page.wait_for_timeout(1500)
+                          await prepare_current_page_if_needed(page, level)
+                          await page.wait_for_timeout(1000)
+
+                      except Exception:
+                          try:
+                              await page.goto(url, wait_until="networkidle", timeout=60000)
+                              await page.wait_for_timeout(1000)
+                              await prepare_current_page_if_needed(page, level)
+
+                          except Exception:
+                              pass
+
+                          continue
+
+              except Exception as e:
+                  print(f"[{level}] Click discovery failed on {url}: {e}")
+
+              await page.close()
+
+              return discovered, clicked_labels
 
           async def get_rendered_page(context, url, level):
               page = await context.new_page()
@@ -299,23 +597,18 @@ jobs:
 
               await page.wait_for_timeout(3000)
 
-              try:
-                  await select_clinical_level(page, level)
-              except Exception as e:
-                  print(f"Level selector not applied on {url}: {e}")
+              await prepare_current_page_if_needed(page, level)
 
               await page.wait_for_timeout(3000)
 
               text = await page.locator("body").inner_text(timeout=30000)
+              html = await page.content()
+              title = await page.title()
 
               links = await page.eval_on_selector_all(
                   "a[href]",
                   "els => els.map(a => a.href)"
               )
-
-              html = await page.content()
-
-              title = await page.title()
 
               await page.close()
 
@@ -327,45 +620,41 @@ jobs:
 
               selected = False
               home_text = ""
+              home_html = ""
               links = []
-              html = ""
+              current_url = ""
 
               try:
-                  await page.goto(
-                      HOME_URL,
-                      wait_until="networkidle",
-                      timeout=60000
-                  )
+                  selected = await prepare_site_for_level(page, level)
 
-                  await page.wait_for_timeout(4000)
-
-                  selected = await select_clinical_level(page, level)
+                  current_url = clean_url(page.url)
 
                   home_text = await page.locator("body").inner_text(timeout=30000)
+                  home_html = await page.content()
 
                   links = await page.eval_on_selector_all(
                       "a[href]",
                       "els => els.map(a => a.href)"
                   )
 
-                  html = await page.content()
-
               except Exception as e:
                   print(f"Failed to initialise level context for {level}: {e}")
 
               await page.close()
 
-              return context, selected, home_text, links, html
+              return context, selected, current_url, home_text, home_html, links
 
           async def crawl_for_level(browser, level):
-              context, selected, home_text, starting_links, home_html = await initialise_level_context(browser, level)
+              context, selected, current_url, home_text, home_html, starting_links = await initialise_level_context(browser, level)
 
               crawl_log = []
+              click_log = []
               source_pages = []
 
               crawl_log.append({
                   "clinical_level": level,
                   "selected_level_successfully": selected,
+                  "current_url_after_selection": current_url,
                   "home_text_length": len(home_text)
               })
 
@@ -373,29 +662,43 @@ jobs:
               visited = set()
               pages = []
 
+              if useful_url(current_url):
+                  queue.append(clean_url(current_url))
+
               for start_url in START_URLS:
                   if useful_url(start_url):
                       queue.append(clean_url(start_url))
 
               for link in starting_links:
                   link = clean_url(urljoin(HOME_URL, link))
-
                   if useful_url(link):
                       queue.append(link)
 
-              extra_home_urls = extract_urls_from_text_and_html(home_text, home_html, HOME_URL)
-
-              for link in extra_home_urls:
+              for link in extract_urls_from_text_and_html(home_text, home_html, HOME_URL):
                   if useful_url(link):
                       queue.append(link)
+
+              # Click discovery on the post-level landing page first.
+              try:
+                  if current_url:
+                      discovered_from_clicks, clicked_labels = await collect_clickable_routes(context, current_url, level)
+
+                      for item in clicked_labels:
+                          click_log.append(item)
+
+                      for link in discovered_from_clicks:
+                          if useful_url(link):
+                              queue.append(link)
+              except Exception as e:
+                  print(f"[{level}] Initial click discovery failed: {e}")
 
               queue = list(dict.fromkeys(queue))
 
               pages_since_new_content = 0
 
-              while queue and len(visited) < MAX_PAGES_PER_LEVEL:
+              while queue and len(visited) < MAX_VISITED_URLS_PER_LEVEL and len(pages) < MAX_CONTENT_PAGES_PER_LEVEL:
                   if pages_since_new_content >= STOP_IF_NO_NEW_CONTENT_FOR:
-                      print(f"[{level}] Stopping crawl after {STOP_IF_NO_NEW_CONTENT_FOR} pages without new content.")
+                      print(f"[{level}] Stopping after {STOP_IF_NO_NEW_CONTENT_FOR} pages without new content.")
                       break
 
                   url = clean_url(queue.pop(0))
@@ -405,8 +708,7 @@ jobs:
 
                   visited.add(url)
 
-                  if is_excluded_url(url):
-                      print(f"[{level}] Skipping excluded URL: {url}")
+                  if not useful_url(url):
                       continue
 
                   try:
@@ -429,8 +731,6 @@ jobs:
                   msg = f"[{level}] Extracted {len(text)} characters from {url} [{content_category}]"
                   print(msg)
                   crawl_log.append(msg)
-
-                  added_content_page = False
 
                   if (
                       len(text) > 300
@@ -456,38 +756,35 @@ jobs:
                           "text_length": len(text)
                       })
 
-                      added_content_page = True
                       pages_since_new_content = 0
-
                   else:
-                      print(f"[{level}] Used for discovery only, not question generation: {url}")
                       pages_since_new_content += 1
+                      print(f"[{level}] Discovery page only: {url}")
 
                   for link in links:
                       link = clean_url(urljoin(url, link))
 
-                      if (
-                          useful_url(link)
-                          and link not in visited
-                          and link not in queue
-                      ):
+                      if useful_url(link) and link not in visited and link not in queue:
                           queue.append(link)
 
-                  extracted_urls = extract_urls_from_text_and_html(text, html, url)
+                  for link in extract_urls_from_text_and_html(text, html, url):
+                      if useful_url(link) and link not in visited and link not in queue:
+                          queue.append(link)
 
-                  for link in extracted_urls:
-                      if (
-                          useful_url(link)
-                          and link not in visited
-                          and link not in queue
-                      ):
+                  discovered_from_clicks, clicked_labels = await collect_clickable_routes(context, url, level)
+
+                  for item in clicked_labels:
+                      click_log.append(item)
+
+                  for link in discovered_from_clicks:
+                      if useful_url(link) and link not in visited and link not in queue:
                           queue.append(link)
 
                   await asyncio.sleep(0.4)
 
               await context.close()
 
-              return pages, crawl_log, source_pages
+              return pages, crawl_log, click_log, source_pages
 
           def extract_json(text):
               text = text.strip()
@@ -670,10 +967,10 @@ jobs:
 
                   source_clean = clean_url(source)
 
-                  if is_home_or_disclaimer_page(source_clean):
+                  if is_excluded_url(source_clean):
                       continue
 
-                  if is_excluded_url(source_clean):
+                  if source_clean in [ROOT_URL, HOME_URL]:
                       continue
 
                   if "Home | SA Ambulance Service" in source_title:
@@ -718,11 +1015,12 @@ jobs:
               return cleaned
 
           async def main():
-              print("Starting dynamic level-aware crawl including Guidelines, Medicines and Calculators.")
+              print("Starting SAAS flow-aware dynamic crawl.")
 
               all_pages = []
               all_questions = []
               all_crawl_logs = []
+              all_click_logs = []
               all_source_pages = []
 
               seen_question_keys = set()
@@ -733,12 +1031,13 @@ jobs:
                   for level in CLINICAL_LEVELS:
                       print(f"Starting crawl for clinical level: {level}")
 
-                      pages, crawl_log, source_pages = await crawl_for_level(browser, level)
+                      pages, crawl_log, click_log, source_pages = await crawl_for_level(browser, level)
 
                       print(f"{level}: crawled {len(pages)} usable detail pages.")
 
                       all_pages.extend(pages)
                       all_crawl_logs.extend(crawl_log)
+                      all_click_logs.extend(click_log)
                       all_source_pages.extend(source_pages)
 
                       for i, page in enumerate(pages, start=1):
@@ -803,12 +1102,14 @@ jobs:
                       "calculators": CALCULATORS_URL
                   },
                   "excluded_sources": EXCLUDED_URL_PREFIXES,
-                  "max_pages_per_level": MAX_PAGES_PER_LEVEL,
+                  "max_visited_urls_per_level": MAX_VISITED_URLS_PER_LEVEL,
+                  "max_content_pages_per_level": MAX_CONTENT_PAGES_PER_LEVEL,
                   "stop_if_no_new_content_for": STOP_IF_NO_NEW_CONTENT_FOR,
                   "page_count": len(all_pages),
                   "question_count": len(all_questions),
                   "question_count_by_level": counts_by_level,
-                  "question_count_by_category": counts_by_category
+                  "question_count_by_category": counts_by_category,
+                  "clicked_routes_count": len(all_click_logs)
               }
 
               with open("data/questions.json", "w", encoding="utf-8") as f:
@@ -819,6 +1120,9 @@ jobs:
 
               with open("data/crawl_log.json", "w", encoding="utf-8") as f:
                   json.dump(all_crawl_logs, f, ensure_ascii=False, indent=2)
+
+              with open("data/click_log.json", "w", encoding="utf-8") as f:
+                  json.dump(all_click_logs, f, ensure_ascii=False, indent=2)
 
               with open("data/source_pages.json", "w", encoding="utf-8") as f:
                   json.dump(all_source_pages, f, ensure_ascii=False, indent=2)
@@ -835,7 +1139,7 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          git add data/questions.json data/metadata.json data/crawl_log.json data/source_pages.json
+          git add data/questions.json data/metadata.json data/crawl_log.json data/click_log.json data/source_pages.json
 
           git diff --staged --quiet || git commit -m "Update quiz questions"
 
