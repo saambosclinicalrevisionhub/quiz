@@ -678,6 +678,9 @@ async def main():
     questions_by_source = load_json(QUESTIONS_BY_SOURCE_PATH, {})
     old_source_pages = load_json(SOURCE_PAGES_PATH, {})
 
+    if isinstance(old_source_pages, list):
+        old_source_pages = {}
+    
     all_crawl_logs = []
     all_click_logs = []
 
