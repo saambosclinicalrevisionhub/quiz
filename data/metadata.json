@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-07-08T16:29:33.535093+00:00",
+  "last_updated": "2026-07-09T00:03:48.094580+00:00",
   "clinical_levels": [
     "Ambulance Assist",
     "Ambulance Responder",
@@ -9,13 +9,23 @@
     "Intensive Care Paramedic",
     "Extended Care Paramedic"
   ],
-  "max_pages_per_level": 5,
-  "page_count": 7,
-  "question_count": 16,
+  "included_sources": {
+    "clinical_practice_guidelines": "https://clinical.saambulance.sa.gov.au/tabs/home",
+    "medicines": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "calculators": "https://clinical.saambulance.sa.gov.au/tabs/calculators"
+  },
+  "excluded_sources": [
+    "https://clinical.saambulance.sa.gov.au/tabs/checklists",
+    "https://clinical.saambulance.sa.gov.au/tabs/checklists/cppro-s"
+  ],
+  "max_pages_per_level": 150,
+  "stop_if_no_new_content_for": 40,
+  "page_count": 0,
+  "question_count": 1,
   "question_count_by_level": {
-    "Ambulance Assist": 4,
-    "Ambulance Officer": 4,
-    "Ambulance Officer Extended Scope": 4,
-    "Paramedic": 4
+    "All": 1
+  },
+  "question_count_by_category": {
+    "Fallback": 1
   }
 }
