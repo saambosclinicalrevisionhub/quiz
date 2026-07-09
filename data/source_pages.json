@@ -5,7 +5,7 @@
     "title": "Adrenaline DMO-002 | SA Ambulance Service",
     "type": "Medicine",
     "hash": "181ac999216a951ba31fd8a4b22ce1e4d72ce3d895db7a7e8306cee0aaf3404a",
-    "capturedAt": "2026-07-09T07:34:01.745359+00:00"
+    "capturedAt": "2026-07-09T22:59:03.558869+00:00"
   },
   "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone": {
     "clinicalLevel": "Paramedic",
@@ -13,7 +13,7 @@
     "title": "Amiodarone DMO-003 | SA Ambulance Service",
     "type": "Medicine",
     "hash": "4cb92cdabf0c4e491d7ba3532cc4dad5fc9b6d8563a32c89417f54eb926fa97c",
-    "capturedAt": "2026-07-09T07:34:59.793806+00:00"
+    "capturedAt": "2026-07-09T23:00:01.649237+00:00"
   },
   "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin": {
     "clinicalLevel": "Paramedic",
@@ -21,7 +21,7 @@
     "title": "Aspirin DMO-004 | SA Ambulance Service",
     "type": "Medicine",
     "hash": "8476be5ef2b02225fe896396185268b08490e26a2154b69b8800fff4c1b4590c",
-    "capturedAt": "2026-07-09T07:35:45.964119+00:00"
+    "capturedAt": "2026-07-09T23:00:47.792836+00:00"
   },
   "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/benzylpenicillin": {
     "clinicalLevel": "Paramedic",
@@ -29,7 +29,7 @@
     "title": "Benzylpenicillin DMO-006 | SA Ambulance Service",
     "type": "Medicine",
     "hash": "1571f119ea1bc4c3b1284851ab183987dbeef243e39cda42ae8401d58858985d",
-    "capturedAt": "2026-07-09T07:36:35.197552+00:00"
+    "capturedAt": "2026-07-09T23:01:37.002639+00:00"
   },
   "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin": {
     "clinicalLevel": "Paramedic",
@@ -37,7 +37,7 @@
     "title": "Carbetocin DMO-040 | SA Ambulance Service",
     "type": "Medicine",
     "hash": "bf57edff1a8b6a747125723572c374f9d89f1f86e4b8b63011ae0e97f3e96d4c",
-    "capturedAt": "2026-07-09T07:37:42.849456+00:00"
+    "capturedAt": "2026-07-09T23:02:44.606561+00:00"
   },
   "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ceftriaxone": {
     "clinicalLevel": "Paramedic",
@@ -45,7 +45,7 @@
     "title": "Ceftriaxone DMO-041 | SA Ambulance Service",
     "type": "Medicine",
     "hash": "43a40c28ab20ee68bff6a825fe7e05d5694b9f6ed9d91acdcf3b040e4239f891",
-    "capturedAt": "2026-07-09T07:38:39.880928+00:00"
+    "capturedAt": "2026-07-09T23:03:41.698435+00:00"
   },
   "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam": {
     "clinicalLevel": "Paramedic",
@@ -53,7 +53,7 @@
     "title": "Clonazepam DMO-032 | SA Ambulance Service",
     "type": "Medicine",
     "hash": "3cb003a68fd0a5d33964532a64d6c8e6e67dff0b0ea3aa787e5d2352d9ddd3b1",
-    "capturedAt": "2026-07-09T07:39:24.498471+00:00"
+    "capturedAt": "2026-07-09T23:04:26.281324+00:00"
   },
   "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte": {
     "clinicalLevel": "Paramedic",
@@ -61,6 +61,6 @@
     "title": "Cophenylcaine DMO-007 | SA Ambulance Service",
     "type": "Medicine",
     "hash": "ea2478da8dd0b357712dc8816e5ffa7bef925a68ce96edd9d0054c3e737ce4c9",
-    "capturedAt": "2026-07-09T07:40:02.948779+00:00"
+    "capturedAt": "2026-07-09T23:05:04.710003+00:00"
   }
 }

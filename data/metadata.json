@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-09T07:40:29.508573+00:00",
+  "generatedAt": "2026-07-09T23:05:04.770313+00:00",
   "mode": "incremental_paramedic_test",
   "clinicalLevels": [
     "Paramedic"
@@ -7,10 +7,6 @@
   "incrementalParamedicTest": true,
   "questionCount": 24,
   "sourceCount": 8,
-  "changedOrNewSourceCount": 3,
-  "changedOrNewSourceKeys": [
-    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
-    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
-    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam"
-  ]
+  "changedOrNewSourceCount": 0,
+  "changedOrNewSourceKeys": []
 }
