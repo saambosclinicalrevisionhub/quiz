@@ -1,58 +1,66 @@
-[
-  {
-    "clinical_level": "Paramedic",
-    "content_category": "Clinical Practice Guideline",
-    "title": "Universal Care and Life Support CPG-137-P | SA Ambulance Service",
-    "url": "https://clinical.saambulance.sa.gov.au/tabs/home/page/universal-care-and-life-support-p",
-    "text_length": 8702
+{
+  "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/adrenaline": {
+    "clinicalLevel": "Paramedic",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/adrenaline",
+    "title": "Adrenaline DMO-002 | SA Ambulance Service",
+    "type": "Medicine",
+    "hash": "181ac999216a951ba31fd8a4b22ce1e4d72ce3d895db7a7e8306cee0aaf3404a",
+    "capturedAt": "2026-07-09T06:30:37.644863+00:00"
   },
-  {
-    "clinical_level": "Paramedic",
-    "content_category": "Medicine",
-    "title": "Fentanyl DMO-009 | SA Ambulance Service",
-    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/fentanyl",
-    "text_length": 2030
-  },
-  {
-    "clinical_level": "Paramedic",
-    "content_category": "Medicine",
-    "title": "Ketamine DMO-017 | SA Ambulance Service",
-    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ketamine",
-    "text_length": 2959
-  },
-  {
-    "clinical_level": "Paramedic",
-    "content_category": "Medicine",
-    "title": "Amiodarone DMO-003 | SA Ambulance Service",
+  "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone": {
+    "clinicalLevel": "Paramedic",
     "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone",
-    "text_length": 1977
+    "title": "Amiodarone DMO-003 | SA Ambulance Service",
+    "type": "Medicine",
+    "hash": "4cb92cdabf0c4e491d7ba3532cc4dad5fc9b6d8563a32c89417f54eb926fa97c",
+    "capturedAt": "2026-07-09T06:31:35.898584+00:00"
   },
-  {
-    "clinical_level": "Paramedic",
-    "content_category": "Medicine",
-    "title": "Saline (Sodium Chloride 0.9%) DMO-029 | SA Ambulance Service",
-    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/sodium-chloride",
-    "text_length": 1787
+  "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin": {
+    "clinicalLevel": "Paramedic",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
+    "title": "Aspirin DMO-004 | SA Ambulance Service",
+    "type": "Medicine",
+    "hash": "8476be5ef2b02225fe896396185268b08490e26a2154b69b8800fff4c1b4590c",
+    "capturedAt": "2026-07-09T06:32:22.216000+00:00"
   },
-  {
-    "clinical_level": "Paramedic",
-    "content_category": "Medicine",
-    "title": "Morphine DMO-023 | SA Ambulance Service",
-    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/morphine",
-    "text_length": 1448
+  "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/benzylpenicillin": {
+    "clinicalLevel": "Paramedic",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/benzylpenicillin",
+    "title": "Benzylpenicillin DMO-006 | SA Ambulance Service",
+    "type": "Medicine",
+    "hash": "1571f119ea1bc4c3b1284851ab183987dbeef243e39cda42ae8401d58858985d",
+    "capturedAt": "2026-07-09T06:33:11.619930+00:00"
   },
-  {
-    "clinical_level": "Paramedic",
-    "content_category": "Medicine",
-    "title": "Fexofenadine DMO-010 | SA Ambulance Service",
-    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/fexofenadine",
-    "text_length": 829
+  "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin": {
+    "clinicalLevel": "Paramedic",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
+    "title": "Carbetocin DMO-040 | SA Ambulance Service",
+    "type": "Medicine",
+    "hash": "bf57edff1a8b6a747125723572c374f9d89f1f86e4b8b63011ae0e97f3e96d4c",
+    "capturedAt": "2026-07-09T06:34:19.196261+00:00"
   },
-  {
-    "clinical_level": "Paramedic",
-    "content_category": "Medicine",
-    "title": "Glucagon DMO-011 | SA Ambulance Service",
-    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/glucagon",
-    "text_length": 1610
+  "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ceftriaxone": {
+    "clinicalLevel": "Paramedic",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ceftriaxone",
+    "title": "Ceftriaxone DMO-041 | SA Ambulance Service",
+    "type": "Medicine",
+    "hash": "43a40c28ab20ee68bff6a825fe7e05d5694b9f6ed9d91acdcf3b040e4239f891",
+    "capturedAt": "2026-07-09T06:35:16.419956+00:00"
+  },
+  "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam": {
+    "clinicalLevel": "Paramedic",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
+    "title": "Clonazepam DMO-032 | SA Ambulance Service",
+    "type": "Medicine",
+    "hash": "3cb003a68fd0a5d33964532a64d6c8e6e67dff0b0ea3aa787e5d2352d9ddd3b1",
+    "capturedAt": "2026-07-09T06:36:00.982251+00:00"
+  },
+  "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte": {
+    "clinicalLevel": "Paramedic",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte",
+    "title": "Cophenylcaine DMO-007 | SA Ambulance Service",
+    "type": "Medicine",
+    "hash": "ea2478da8dd0b357712dc8816e5ffa7bef925a68ce96edd9d0054c3e737ce4c9",
+    "capturedAt": "2026-07-09T06:36:39.577807+00:00"
   }
-]
+}

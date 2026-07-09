@@ -1,19 +1,45 @@
 [
   {
-    "clinical_level": "Paramedic",
-    "selected_level_successfully": true,
-    "current_url_after_selection": "https://clinical.saambulance.sa.gov.au/tabs/home",
-    "home_text_length": 251
-  },
-  "[Paramedic] Extracted 251 characters from https://clinical.saambulance.sa.gov.au/tabs/home [Clinical Practice Guideline]",
-  "[Paramedic] Extracted 762 characters from https://clinical.saambulance.sa.gov.au/tabs/medicines [Medicine]",
-  "[Paramedic] Extracted 190 characters from https://clinical.saambulance.sa.gov.au/tabs/calculators [Calculator]",
-  "[Paramedic] Extracted 8702 characters from https://clinical.saambulance.sa.gov.au/tabs/home/page/universal-care-and-life-support-p [Clinical Practice Guideline]",
-  "[Paramedic] Extracted 2030 characters from https://clinical.saambulance.sa.gov.au/tabs/medicines/page/fentanyl [Medicine]",
-  "[Paramedic] Extracted 2959 characters from https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ketamine [Medicine]",
-  "[Paramedic] Extracted 1977 characters from https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone [Medicine]",
-  "[Paramedic] Extracted 1787 characters from https://clinical.saambulance.sa.gov.au/tabs/medicines/page/sodium-chloride [Medicine]",
-  "[Paramedic] Extracted 1448 characters from https://clinical.saambulance.sa.gov.au/tabs/medicines/page/morphine [Medicine]",
-  "[Paramedic] Extracted 829 characters from https://clinical.saambulance.sa.gov.au/tabs/medicines/page/fexofenadine [Medicine]",
-  "[Paramedic] Extracted 1610 characters from https://clinical.saambulance.sa.gov.au/tabs/medicines/page/glucagon [Medicine]"
+    "clinicalLevel": "Paramedic",
+    "selectedLevel": true,
+    "incrementalParamedicTest": true,
+    "startedAt": "2026-07-09T06:24:37.088633+00:00",
+    "visited": [
+      "https://clinical.saambulance.sa.gov.au/tabs/home",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+      "https://clinical.saambulance.sa.gov.au/tabs/calculators",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/adrenaline",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/benzylpenicillin",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ceftriaxone",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte"
+    ],
+    "contentPages": [
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/adrenaline",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/benzylpenicillin",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ceftriaxone",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte"
+    ],
+    "unchangedPages": [],
+    "changedPages": [],
+    "newPages": [
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/adrenaline",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/benzylpenicillin",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ceftriaxone",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte"
+    ],
+    "errors": [],
+    "finishedAt": "2026-07-09T06:36:39.577823+00:00"
+  }
 ]

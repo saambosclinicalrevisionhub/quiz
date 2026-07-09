@@ -1,260 +1,313 @@
 [
   {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/home",
-    "label": "Universal Care and Life Support CPG-137-P",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/home/page/universal-care-and-life-support-p"
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/home",
+    "labelsClicked": [
+      "Level Paramedic Recent Favourites",
+      "Level Paramedic Recent Favourites",
+      "Level",
+      "Paramedic",
+      "Recent",
+      "Favourites",
+      "No favourites",
+      "No favourites"
+    ],
+    "linksFound": [
+      "https://clinical.saambulance.sa.gov.au/tabs/home"
+    ]
   },
   {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/home",
-    "label": "Universal Care and Life Support CPG-137-P",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/home/page/universal-care-and-life-support-p"
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "labelsClicked": [
+      "Medicines",
+      "Adrenaline DMO-002",
+      "Adrenaline DMO-002",
+      "Adrenaline DMO-002",
+      "Adrenaline",
+      "Adrenaline",
+      "DMO-002",
+      "DMO-002",
+      "Amiodarone DMO-003",
+      "Amiodarone DMO-003",
+      "Amiodarone DMO-003",
+      "Amiodarone",
+      "Amiodarone",
+      "DMO-003",
+      "DMO-003",
+      "Aspirin DMO-004",
+      "Aspirin DMO-004",
+      "Aspirin DMO-004",
+      "Aspirin",
+      "Aspirin",
+      "DMO-004",
+      "DMO-004",
+      "Benzylpenicillin DMO-006",
+      "Benzylpenicillin DMO-006",
+      "Benzylpenicillin DMO-006",
+      "Benzylpenicillin",
+      "Benzylpenicillin",
+      "DMO-006",
+      "DMO-006",
+      "Carbetocin DMO-040",
+      "Carbetocin DMO-040",
+      "Carbetocin DMO-040",
+      "Carbetocin",
+      "Carbetocin",
+      "DMO-040",
+      "DMO-040",
+      "Ceftriaxone DMO-041",
+      "Ceftriaxone DMO-041",
+      "Ceftriaxone DMO-041",
+      "Ceftriaxone",
+      "Ceftriaxone",
+      "DMO-041",
+      "DMO-041",
+      "Clonazepam DMO-032",
+      "Clonazepam DMO-032",
+      "Clonazepam DMO-032",
+      "Clonazepam",
+      "Clonazepam",
+      "DMO-032",
+      "DMO-032",
+      "Cophenylcaine DMO-007",
+      "Cophenylcaine DMO-007",
+      "Cophenylcaine DMO-007",
+      "Cophenylcaine",
+      "Cophenylcaine",
+      "DMO-007",
+      "DMO-007",
+      "Droperidol DMO-008",
+      "Droperidol DMO-008",
+      "Droperidol DMO-008",
+      "Droperidol",
+      "Droperidol",
+      "DMO-008",
+      "DMO-008"
+    ],
+    "linksFound": [
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/adrenaline",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/benzylpenicillin",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ceftriaxone",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte",
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/droperidol"
+    ]
   },
   {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Adrenaline DMO-002",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/adrenaline"
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/calculators",
+    "labelsClicked": [
+      "Calculators",
+      "Medicine Calculator"
+    ],
+    "linksFound": [
+      "https://clinical.saambulance.sa.gov.au/tabs/calculators",
+      "https://clinical.saambulance.sa.gov.au/tabs/calculators/page/medicine-calculator"
+    ]
   },
   {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Amiodarone DMO-003",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone"
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/adrenaline",
+    "labelsClicked": [
+      "Adrenaline",
+      "DMO-002",
+      "Indications / Scope of Practice Patient Factors Efficacy & Safety My Notes",
+      "Indications / Scope of Practice",
+      "Patient Factors",
+      "Efficacy & Safety",
+      "My Notes",
+      "double drug interval (30°-35°C)",
+      "withhold drugs (< 30°C)",
+      "IM route is preferred in asthma/anaphylaxis as it is safer than IV administration",
+      "IV infusion is safer than slow IV bolus",
+      "syringe driver requires initial bolus at start for dead space",
+      "Sign in"
+    ],
+    "linksFound": [
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/adrenaline"
+    ]
   },
   {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Aspirin DMO-004",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin"
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone",
+    "labelsClicked": [
+      "Amiodarone",
+      "DMO-003",
+      "Indications / Scope of Practice Patient Factors Efficacy & Safety My Notes",
+      "Indications / Scope of Practice",
+      "Patient Factors",
+      "Efficacy & Safety",
+      "My Notes",
+      "In cardiac arrest undiluted drug should be administered following the 3rd DCCS",
+      "withhold drugs (< 30°C)",
+      "Post-ROSC adults with recurrent episodes VF/VT may benefit from amiodarone infusion",
+      "Contraindicated in Torsades de Pointe",
+      "administer age appropriate dose (5 mg/kg) neat i.e. no dilution needed",
+      "≤ 1 yr use 1 mL syringe to draw up age appropriate dose",
+      "amiodarone may be diluted in saline and administered via large vein",
+      "administer slowly to mitigate vasodilation and hypotension",
+      "flush residual drug in giving set line at same rate to deliver entire dose",
+      "use syringe method of administration for IO infusions without a driver: per CPPRO-015",
+      "per CPPRO-015",
+      "CPPRO-015",
+      "Notable - include bradycardia and hypotension",
+      "Sign in"
+    ],
+    "linksFound": [
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone"
+    ]
   },
   {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Benzylpenicillin DMO-006",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/benzylpenicillin"
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
+    "labelsClicked": [
+      "Aspirin",
+      "DMO-004",
+      "Indications / Scope of Practice Patient Factors Efficacy & Safety My Notes",
+      "Indications / Scope of Practice",
+      "Patient Factors",
+      "Efficacy & Safety",
+      "My Notes",
+      "severe active bleeding",
+      "anaphylaxis to aspirin and NSAIDs",
+      "paediatrics (associated with Reye’s syndrome)",
+      "may be chewed or dispersed in water",
+      "note aspirin breaks down rapidly if stored incorrectly",
+      "Common adverse effects include GIT irritation and increased bleeding time",
+      "Onset of action approximately 10 mins",
+      "Sign in"
+    ],
+    "linksFound": [
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin"
+    ]
   },
   {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Carbetocin DMO-040",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin"
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/benzylpenicillin",
+    "labelsClicked": [
+      "Benzylpenicillin",
+      "DMO-006",
+      "Indications / Scope of Practice Patient Factors Efficacy & Safety My Notes",
+      "Indications / Scope of Practice",
+      "Patient Factors",
+      "Efficacy & Safety",
+      "My Notes",
+      "early administration of benzylpenicillin improves outcome",
+      "Appropriate PPE",
+      "Monitor patients closely for circulatory collapse if sepsis is suspected",
+      "IV dose slow push over 3-4 mins",
+      "rapid administration of large doses may result in seizures",
+      "Consult EOC clinician regarding patient meningococcal management plan",
+      "Reconstitute each 1.2 g benzylpenicillin vial with 3.2 mL water for injection (1.2 g/4 mL)",
+      "Divide IM doses > 1.2 g/4 mL in 2 separate injection sites",
+      "Benzylpenicillin is generally well tolerated",
+      "Sign in"
+    ],
+    "linksFound": [
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/benzylpenicillin"
+    ]
   },
   {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Ceftriaxone DMO-041",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ceftriaxone"
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
+    "labelsClicked": [
+      "Carbetocin",
+      "DMO-040",
+      "Indications / Scope of Practice Patient Factors Efficacy & Safety My Notes",
+      "Indications / Scope of Practice",
+      "Patient Factors",
+      "Efficacy & Safety",
+      "My Notes",
+      "Nil dilution required for IM administration",
+      "Nil dilution required for IM administration",
+      "Carbetocin is a single dose only",
+      "Carbetocin is a single dose only",
+      "Not to be given prior to the delivery of ALL fetus’",
+      "Not to be given prior to the delivery of ALL fetus’",
+      "Unknown number of fetus or unclear ante-natal care",
+      "Not to be used in first and second stage labour",
+      "Patients <16 years old",
+      "Allergy to carbetocin OR oxytocin",
+      "Precautions: Pre-eclampsia Migraine Asthma",
+      "Pre-eclampsia",
+      "Migraine",
+      "Asthma",
+      "Immediate effect: sustained uterine contractions for approx. 11 minutes",
+      "Prolonged effect: rhythmic contractions approx. 120 minutes",
+      "Distribution: enters breast milk (small amount)",
+      "Significant adverse effects Abdominal pain Flushing/feeling of warmth Tachycardia",
+      "Abdominal pain",
+      "Flushing/feeling of warmth",
+      "Tachycardia",
+      "Sign in"
+    ],
+    "linksFound": [
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin"
+    ]
   },
   {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Clonazepam DMO-032",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam"
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ceftriaxone",
+    "labelsClicked": [
+      "Ceftriaxone",
+      "DMO-041",
+      "Indications / Scope of Practice: Patient Factors Efficacy & Safety My Notes",
+      "Indications / Scope of Practice:",
+      "Patient Factors",
+      "Efficacy & Safety",
+      "My Notes",
+      "Cephalosporin allergy",
+      "Preterm neonates",
+      "Do not administer concurrently with any other medications.",
+      "Full term neonates with jaundice or other conditions",
+      "Presentation: 1 g vial as ceftriaxone",
+      "Onset of action: 30 minutes",
+      "Refer to medication calculator for weight-based doses",
+      "Ceftriaxone 1 g vial: Dilute with 9.5 mL sodium chloride 0.9% to make 10 mL (100 mg/mL).",
+      "Administer total dose over slowly over 4 minutes",
+      "Ceftriaxone 1 g vial: Dilute with 3.5 mL sodium chloride 0.9% to make 4 mL (250 mg/mL)",
+      "Administer maximum 1 g (4 mL) per IM injection site",
+      "GI: Diarrhoea, nausea, vomiting",
+      "CV: May cause irritation at injection site",
+      "Other: rash, headache, dizziness",
+      "Sign in"
+    ],
+    "linksFound": [
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ceftriaxone"
+    ]
   },
   {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Cophenylcaine DMO-007",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte"
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
+    "labelsClicked": [
+      "Clonazepam",
+      "DMO-032",
+      "Indications / Scope of Practice: Patient Factors Efficacy & Safety My Notes",
+      "Indications / Scope of Practice:",
+      "Patient Factors",
+      "Efficacy & Safety",
+      "My Notes",
+      "Ensure oral cavity is moist before administering",
+      "Clonazepam classified as a long length-of-action benzodiazepine (no active metabolites)",
+      "Onset of action 15 mins; duration of action 6-12 hr",
+      "Dosage must be written in drops rather than mg (each drop is 0.1 mg)",
+      "Sign in"
+    ],
+    "linksFound": [
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam"
+    ]
   },
   {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Droperidol DMO-008",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/droperidol"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Fentanyl DMO-009",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/fentanyl"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Fexofenadine DMO-010",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/fexofenadine"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Glucagon DMO-011",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/glucagon"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Glucose Gel DMO-012",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/glucose-gel"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Glucose IV DMO-013",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/glucose-ten"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Glyceryl Trinitrate (GTN) DMO-014",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/gtn"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Haloperidol DMO-033",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/haloperidol"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Hyoscine Butylbromide DMO-034",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/hyoscine-butylbromide"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Ibuprofen DMO-036",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ibuprofen"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Ipratropium DMO-016",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ipratropium-br"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Ketamine DMO-017",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ketamine"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Ketorolac DMO-037",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ketorolac"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Lorazepam DMO-019",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/lorazepam"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Methoxyflurane DMO-021",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/methoxyflurane-penthrox"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Metoclopramide DMO-035",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/metoclopramide"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Midazolam DMO-022",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/midazolam"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Morphine DMO-023",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/morphine"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Naloxone DMO-024",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/naloxone"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Olanzapine DMO-039",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/olanzapine"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Ondansetron DMO-025",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ondansetron"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Paracetamol DMO-026",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/paracetamol"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Prednisolone DMO-027",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/prednisolone"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Salbutamol DMO-028",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/salbutamol"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Saline (Sodium Chloride 0.9%) DMO-029",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/sodium-chloride"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "label": "Tranexamic Acid (TXA) DMO-030",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/tranexamic-acid-txa"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/calculators",
-    "label": "Medicine Calculator",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/calculators/page/medicine-calculator"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/calculators",
-    "label": "Page Per Age Calculator",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/calculators/page/page-per-age-calculator"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/calculators",
-    "label": "NEWS2 Calculator",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/calculators/page/news-two-score-calculator"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/calculators",
-    "label": "APGAR Assessment",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/calculators/page/apgar-assessment"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/calculators",
-    "label": "ROSIER+ACT Assessment",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/calculators/page/rosier-act-assessment"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/calculators",
-    "label": "Burns %TBSA Calculator",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/calculators/page/burns-fluid-calculator"
-  },
-  {
-    "clinical_level": "Paramedic",
-    "from": "https://clinical.saambulance.sa.gov.au/tabs/calculators",
-    "label": "GCS Calculator",
-    "to": "https://clinical.saambulance.sa.gov.au/tabs/calculators/page/gcs-calculator"
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte",
+    "labelsClicked": [
+      "Cophenylcaine",
+      "DMO-007",
+      "Indications / Scope of Practice Patient Factors Efficacy & Safety My Notes",
+      "Indications / Scope of Practice",
+      "Patient Factors",
+      "Efficacy & Safety",
+      "My Notes",
+      "Allow 1-2 mins (where possible) for onset of action to allow ease of NPA insertion",
+      "Onset of action is almost immediate with a duration of action of approx 1 hr",
+      "Sign in"
+    ],
+    "linksFound": [
+      "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte"
+    ]
   }
 ]

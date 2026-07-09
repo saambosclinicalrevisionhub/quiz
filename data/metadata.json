@@ -1,29 +1,21 @@
 {
-  "last_updated": "2026-07-09T04:16:42.652846+00:00",
-  "temporary_test_mode": true,
-  "clinical_levels": [
+  "generatedAt": "2026-07-09T06:37:19.188412+00:00",
+  "mode": "incremental_paramedic_test",
+  "clinicalLevels": [
     "Paramedic"
   ],
-  "included_sources": {
-    "clinical_practice_guidelines": "https://clinical.saambulance.sa.gov.au/tabs/home",
-    "medicines": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
-    "calculators": "https://clinical.saambulance.sa.gov.au/tabs/calculators"
-  },
-  "excluded_sources": [
-    "https://clinical.saambulance.sa.gov.au/tabs/checklists",
-    "https://clinical.saambulance.sa.gov.au/tabs/checklists/cppro-s",
-    "https://clinical.saambulance.sa.gov.au/tabs/tools"
-  ],
-  "max_visited_urls_per_level": 40,
-  "max_content_pages_per_level": 8,
-  "stop_if_no_new_content_for": 12,
-  "page_count": 8,
-  "question_count": 1,
-  "question_count_by_level": {
-    "All": 1
-  },
-  "question_count_by_category": {
-    "Fallback": 1
-  },
-  "clicked_routes_count": 43
+  "incrementalParamedicTest": true,
+  "questionCount": 12,
+  "sourceCount": 4,
+  "changedOrNewSourceCount": 8,
+  "changedOrNewSourceKeys": [
+    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/adrenaline",
+    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone",
+    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
+    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/benzylpenicillin",
+    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
+    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ceftriaxone",
+    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
+    "Paramedic|https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte"
+  ]
 }
