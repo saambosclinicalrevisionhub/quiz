@@ -42,7 +42,7 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          git add data/questions.json data/metadata.json data/crawl_log.json data/click_log.json data/source_pages.json
+          git add data/*.json
 
           if git diff --staged --quiet; then
             echo "No quiz data changes to commit."
