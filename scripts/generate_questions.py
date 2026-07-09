@@ -1,7 +1,6 @@
 import os
 import json
 import re
-import time
 import asyncio
 import hashlib
 import requests
@@ -11,6 +10,7 @@ from datetime import datetime, timezone
 from playwright.async_api import async_playwright
 
 DOMAIN = "clinical.saambulance.sa.gov.au"
+
 ROOT_URL = "https://clinical.saambulance.sa.gov.au"
 HOME_URL = "https://clinical.saambulance.sa.gov.au/tabs/home"
 MEDICINES_URL = "https://clinical.saambulance.sa.gov.au/tabs/medicines"
@@ -26,6 +26,7 @@ incremental_paramedic_test = True
 
 EXCLUDED_URL_PREFIXES = [
     "https://clinical.saambulance.sa.gov.au/tabs/checklists",
+    "https://clinical.saambulance.sa.gov.au/tabs/checklists/cppro-s",
     "https://clinical.saambulance.sa.gov.au/tabs/tools"
 ]
 
@@ -40,11 +41,11 @@ QUESTIONS_PER_PAGE = 3
 
 GEMINI_MODELS = [
     "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash"
+    "gemini-2.0-flash"
 ]
 
 DATA_DIR = "data"
+
 QUESTIONS_PATH = os.path.join(DATA_DIR, "questions.json")
 QUESTIONS_BY_SOURCE_PATH = os.path.join(DATA_DIR, "questions_by_source.json")
 PAGE_HASHES_PATH = os.path.join(DATA_DIR, "page_hashes.json")
@@ -55,6 +56,7 @@ SOURCE_PAGES_PATH = os.path.join(DATA_DIR, "source_pages.json")
 GEMINI_DEBUG_PATH = os.path.join(DATA_DIR, "gemini_debug.json")
 
 api_key = os.environ.get("GEMINI_API_KEY")
+
 if not api_key:
     raise RuntimeError("GEMINI_API_KEY is missing.")
 
@@ -64,6 +66,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 def load_json(path, default):
     if not os.path.exists(path):
         return default
+
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -83,6 +86,7 @@ def now_iso():
 def clean_url(url):
     if not url:
         return ""
+
     return url.split("#")[0].rstrip("/")
 
 
@@ -93,24 +97,51 @@ def is_internal(url):
 
 def is_excluded_url(url):
     cleaned = clean_url(url)
-    return any(cleaned.startswith(prefix) for prefix in EXCLUDED_URL_PREFIXES)
+
+    for prefix in EXCLUDED_URL_PREFIXES:
+        if cleaned.startswith(prefix):
+            return True
+
+    return False
 
 
 def is_allowed_site_area(url):
     cleaned = clean_url(url)
+
     if not is_internal(cleaned):
         return False
+
     if is_excluded_url(cleaned):
         return False
-    return cleaned.startswith(HOME_URL) or cleaned.startswith(MEDICINES_URL) or cleaned.startswith(CALCULATORS_URL)
+
+    allowed_prefixes = [
+        HOME_URL,
+        MEDICINES_URL,
+        CALCULATORS_URL
+    ]
+
+    for prefix in allowed_prefixes:
+        if cleaned.startswith(prefix):
+            return True
+
+    return False
 
 
 def useful_url(url):
     cleaned = clean_url(url)
+
     if not cleaned:
         return False
+
+    if not is_internal(cleaned):
+        return False
+
+    if is_excluded_url(cleaned):
+        return False
+
     if not is_allowed_site_area(cleaned):
         return False
+
     bad_parts = [
         "/tabs/checklists",
         "/cppro",
@@ -118,37 +149,53 @@ def useful_url(url):
         "/favorites",
         "/recent"
     ]
-    return not any(part in cleaned.lower() for part in bad_parts)
+
+    for part in bad_parts:
+        if part in cleaned.lower():
+            return False
+
+    return True
 
 
 def categorise_url(url):
     cleaned = clean_url(url)
+
     if cleaned.startswith(MEDICINES_URL):
         return "Medicine"
+
     if cleaned.startswith(CALCULATORS_URL):
         return "Calculator"
+
     if cleaned.startswith(HOME_URL):
         return "Clinical Practice Guideline"
+
     return "Other"
 
 
 def is_detail_content_page(url):
     cleaned = clean_url(url)
+
     if not is_allowed_site_area(cleaned):
         return False
+
     if cleaned in [ROOT_URL, HOME_URL, MEDICINES_URL, CALCULATORS_URL]:
         return False
+
     if cleaned.startswith(HOME_URL) and "/page/" in cleaned:
         return True
+
     if cleaned.startswith(MEDICINES_URL + "/"):
         return True
+
     if cleaned.startswith(CALCULATORS_URL + "/"):
         return True
+
     return False
 
 
 def looks_like_disclaimer_text(text):
     lowered = text.lower()
+
     disclaimer_terms = [
         "not intended to serve as health",
         "medical or treatment advice",
@@ -159,12 +206,19 @@ def looks_like_disclaimer_text(text):
         "external websites",
         "does not endorse any external website"
     ]
-    count = sum(1 for term in disclaimer_terms if term in lowered)
+
+    count = 0
+
+    for term in disclaimer_terms:
+        if term in lowered:
+            count = count + 1
+
     return count >= 2
 
 
 def looks_like_real_content(text):
     lowered = text.lower()
+
     content_terms = [
         "principle",
         "principles",
@@ -184,7 +238,12 @@ def looks_like_real_content(text):
         "calculation",
         "considerations"
     ]
-    return any(term in lowered for term in content_terms)
+
+    for term in content_terms:
+        if term in lowered:
+            return True
+
+    return False
 
 
 def normalise_text_for_hash(text):
@@ -219,11 +278,13 @@ def extract_urls_from_text_and_html(text, html, base_url):
 
     for match in absolute_matches:
         url = clean_url(match)
+
         if useful_url(url):
             found.add(url)
 
     for match in relative_matches:
         url = clean_url(urljoin(base_url, match))
+
         if useful_url(url):
             found.add(url)
 
@@ -234,33 +295,46 @@ async def click_text_if_present(page, texts):
     for text in texts:
         try:
             locator = page.get_by_text(text, exact=True)
+
             if await locator.count() > 0:
                 await locator.first.click(timeout=5000)
                 await page.wait_for_timeout(2500)
                 return True
+
         except Exception:
             pass
+
     return False
 
 
 async def click_disclaimer_ok_if_present(page):
     return await click_text_if_present(
         page,
-        ["OK", "Ok", "I agree", "Agree", "Accept", "Continue"]
+        [
+            "OK",
+            "Ok",
+            "I agree",
+            "Agree",
+            "Accept",
+            "Continue"
+        ]
     )
 
 
 async def click_level_on_select_page(page, level):
     selected = False
+
     print(f"Trying to select level: {level}")
 
     try:
         locator = page.get_by_text(level, exact=True)
+
         if await locator.count() > 0:
             await locator.first.click(timeout=7000)
             await page.wait_for_timeout(4000)
             selected = True
             print(f"Selected level by exact text: {level}")
+
     except Exception as error:
         print(f"Could not click exact level text {level}: {error}")
 
@@ -269,11 +343,13 @@ async def click_level_on_select_page(page, level):
 
     try:
         locator = page.get_by_text(level, exact=False)
+
         if await locator.count() > 0:
             await locator.first.click(timeout=7000)
             await page.wait_for_timeout(4000)
             selected = True
             print(f"Selected level by partial text: {level}")
+
     except Exception as error:
         print(f"Could not click partial level text {level}: {error}")
 
@@ -281,7 +357,10 @@ async def click_level_on_select_page(page, level):
         return True
 
     try:
-        candidates = await page.locator("button, a, ion-item, mat-list-item, div, span").all()
+        candidates = await page.locator(
+            "button, a, ion-item, mat-list-item, div, span"
+        ).all()
+
         for element in candidates[:150]:
             try:
                 if not await element.is_visible(timeout=500):
@@ -296,8 +375,10 @@ async def click_level_on_select_page(page, level):
                     selected = True
                     print(f"Selected level by element scan: {level}")
                     break
+
             except Exception:
                 continue
+
     except Exception:
         pass
 
@@ -371,6 +452,7 @@ async def collect_basic_links(page, base_url):
 
         for href in links:
             href = clean_url(href)
+
             if useful_url(href):
                 urls.add(href)
 
@@ -391,6 +473,7 @@ async def collect_basic_links(page, base_url):
 async def collect_click_discovered_links(page):
     urls = set()
     clicked_labels = []
+
     selectors = "button, a, ion-item, mat-list-item, [role=button], div, span"
 
     try:
@@ -535,6 +618,7 @@ def call_gemini(prompt):
 
             data = response.json()
             text = data["candidates"][0]["content"]["parts"][0]["text"]
+
             text = text.strip()
             text = re.sub(r"^```json", "", text).strip()
             text = re.sub(r"^```", "", text).strip()
@@ -555,11 +639,13 @@ def call_gemini(prompt):
 
 def normalise_question(question, page_record, clinical_level):
     q = dict(question)
+
     q["clinicalLevel"] = clinical_level
     q["sourceUrl"] = page_record.get("url", "")
     q["sourceTitle"] = page_record.get("title", "")
     q["sourceType"] = page_record.get("type", "Clinical Practice Guideline")
     q["updatedAt"] = now_iso()
+
     return q
 
 
@@ -598,6 +684,7 @@ async def crawl_for_level(browser, clinical_level, previous_hashes):
             continue
 
         seen.add(url)
+
         print(f"Visiting {clinical_level}: {url}")
 
         try:
@@ -641,7 +728,7 @@ async def crawl_for_level(browser, clinical_level, previous_hashes):
                     no_new_content_count = 0
                 else:
                     crawl_log["unchangedPages"].append(url)
-                    no_new_content_count += 1
+                    no_new_content_count = no_new_content_count + 1
 
                 if len(content_pages) >= MAX_CONTENT_PAGES_PER_LEVEL:
                     print("Content page limit reached for this test run.")
@@ -652,7 +739,11 @@ async def crawl_for_level(browser, clinical_level, previous_hashes):
                     break
 
         except Exception as error:
-            crawl_log["errors"].append({"url": url, "error": str(error)})
+            crawl_log["errors"].append({
+                "url": url,
+                "error": str(error)
+            })
+
             print(f"Error visiting {url}: {error}")
 
     crawl_log["finishedAt"] = now_iso()
@@ -667,6 +758,7 @@ def rebuild_flat_questions(questions_by_source):
 
     for source_key in sorted(questions_by_source.keys()):
         items = questions_by_source[source_key]
+
         if isinstance(items, list):
             flat.extend(items)
 
@@ -678,9 +770,15 @@ async def main():
     questions_by_source = load_json(QUESTIONS_BY_SOURCE_PATH, {})
     old_source_pages = load_json(SOURCE_PAGES_PATH, {})
 
+    if isinstance(previous_hashes, list):
+        previous_hashes = {}
+
+    if isinstance(questions_by_source, list):
+        questions_by_source = {}
+
     if isinstance(old_source_pages, list):
         old_source_pages = {}
-    
+
     all_crawl_logs = []
     all_click_logs = []
 
@@ -694,7 +792,11 @@ async def main():
         browser = await playwright.chromium.launch(headless=True)
 
         for clinical_level in CLINICAL_LEVELS:
-            content_pages, crawl_log, click_log = await crawl_for_level(browser, clinical_level, previous_hashes)
+            content_pages, crawl_log, click_log = await crawl_for_level(
+                browser,
+                clinical_level,
+                previous_hashes
+            )
 
             all_crawl_logs.append(crawl_log)
             all_click_logs.extend(click_log)
@@ -717,13 +819,16 @@ async def main():
                     "capturedAt": page_record["capturedAt"]
                 }
 
-                if old_hash != new_hash:
+                if old_hash != new_hash or not questions_by_source.get(source_key):
                     changed_or_new_source_keys.append(source_key)
 
                     prompt = build_prompt(page_record, clinical_level)
                     questions, model, error = call_gemini(prompt)
 
                     debug_record = load_json(GEMINI_DEBUG_PATH, [])
+
+                    if not isinstance(debug_record, list):
+                        debug_record = []
 
                     debug_record.append({
                         "sourceKey": source_key,
