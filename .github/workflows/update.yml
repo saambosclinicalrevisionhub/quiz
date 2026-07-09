@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: update-quiz
+  cancel-in-progress: false
+
 jobs:
   update-quiz:
     runs-on: ubuntu-latest
@@ -40,6 +44,13 @@ jobs:
 
           git add data/questions.json data/metadata.json data/crawl_log.json data/click_log.json data/source_pages.json
 
-          git diff --staged --quiet || git commit -m "Update quiz questions"
+          if git diff --staged --quiet; then
+            echo "No quiz data changes to commit."
+            exit 0
+          fi
 
-          git push
+          git commit -m "Update quiz questions"
+
+          git pull --rebase origin main
+
+          git push origin main
