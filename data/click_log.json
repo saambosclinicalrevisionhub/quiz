@@ -1,0 +1,260 @@
+[
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/home",
+    "label": "Universal Care and Life Support CPG-137-P",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/home/page/universal-care-and-life-support-p"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/home",
+    "label": "Universal Care and Life Support CPG-137-P",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/home/page/universal-care-and-life-support-p"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Adrenaline DMO-002",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/adrenaline"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Amiodarone DMO-003",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Aspirin DMO-004",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Benzylpenicillin DMO-006",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/benzylpenicillin"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Carbetocin DMO-040",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Ceftriaxone DMO-041",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ceftriaxone"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Clonazepam DMO-032",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Cophenylcaine DMO-007",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Droperidol DMO-008",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/droperidol"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Fentanyl DMO-009",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/fentanyl"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Fexofenadine DMO-010",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/fexofenadine"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Glucagon DMO-011",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/glucagon"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Glucose Gel DMO-012",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/glucose-gel"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Glucose IV DMO-013",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/glucose-ten"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Glyceryl Trinitrate (GTN) DMO-014",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/gtn"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Haloperidol DMO-033",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/haloperidol"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Hyoscine Butylbromide DMO-034",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/hyoscine-butylbromide"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Ibuprofen DMO-036",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ibuprofen"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Ipratropium DMO-016",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ipratropium-br"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Ketamine DMO-017",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ketamine"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Ketorolac DMO-037",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ketorolac"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Lorazepam DMO-019",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/lorazepam"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Methoxyflurane DMO-021",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/methoxyflurane-penthrox"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Metoclopramide DMO-035",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/metoclopramide"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Midazolam DMO-022",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/midazolam"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Morphine DMO-023",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/morphine"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Naloxone DMO-024",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/naloxone"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Olanzapine DMO-039",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/olanzapine"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Ondansetron DMO-025",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ondansetron"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Paracetamol DMO-026",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/paracetamol"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Prednisolone DMO-027",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/prednisolone"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Salbutamol DMO-028",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/salbutamol"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Saline (Sodium Chloride 0.9%) DMO-029",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/sodium-chloride"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/medicines",
+    "label": "Tranexamic Acid (TXA) DMO-030",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/tranexamic-acid-txa"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/calculators",
+    "label": "Medicine Calculator",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/calculators/page/medicine-calculator"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/calculators",
+    "label": "Page Per Age Calculator",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/calculators/page/page-per-age-calculator"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/calculators",
+    "label": "NEWS2 Calculator",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/calculators/page/news-two-score-calculator"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/calculators",
+    "label": "APGAR Assessment",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/calculators/page/apgar-assessment"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/calculators",
+    "label": "ROSIER+ACT Assessment",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/calculators/page/rosier-act-assessment"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/calculators",
+    "label": "Burns %TBSA Calculator",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/calculators/page/burns-fluid-calculator"
+  },
+  {
+    "clinical_level": "Paramedic",
+    "from": "https://clinical.saambulance.sa.gov.au/tabs/calculators",
+    "label": "GCS Calculator",
+    "to": "https://clinical.saambulance.sa.gov.au/tabs/calculators/page/gcs-calculator"
+  }
+]

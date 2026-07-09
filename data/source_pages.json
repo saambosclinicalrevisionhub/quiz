@@ -1,1 +1,58 @@
-[]
+[
+  {
+    "clinical_level": "Paramedic",
+    "content_category": "Clinical Practice Guideline",
+    "title": "Universal Care and Life Support CPG-137-P | SA Ambulance Service",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/home/page/universal-care-and-life-support-p",
+    "text_length": 8702
+  },
+  {
+    "clinical_level": "Paramedic",
+    "content_category": "Medicine",
+    "title": "Fentanyl DMO-009 | SA Ambulance Service",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/fentanyl",
+    "text_length": 2030
+  },
+  {
+    "clinical_level": "Paramedic",
+    "content_category": "Medicine",
+    "title": "Ketamine DMO-017 | SA Ambulance Service",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ketamine",
+    "text_length": 2959
+  },
+  {
+    "clinical_level": "Paramedic",
+    "content_category": "Medicine",
+    "title": "Amiodarone DMO-003 | SA Ambulance Service",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone",
+    "text_length": 1977
+  },
+  {
+    "clinical_level": "Paramedic",
+    "content_category": "Medicine",
+    "title": "Saline (Sodium Chloride 0.9%) DMO-029 | SA Ambulance Service",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/sodium-chloride",
+    "text_length": 1787
+  },
+  {
+    "clinical_level": "Paramedic",
+    "content_category": "Medicine",
+    "title": "Morphine DMO-023 | SA Ambulance Service",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/morphine",
+    "text_length": 1448
+  },
+  {
+    "clinical_level": "Paramedic",
+    "content_category": "Medicine",
+    "title": "Fexofenadine DMO-010 | SA Ambulance Service",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/fexofenadine",
+    "text_length": 829
+  },
+  {
+    "clinical_level": "Paramedic",
+    "content_category": "Medicine",
+    "title": "Glucagon DMO-011 | SA Ambulance Service",
+    "url": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/glucagon",
+    "text_length": 1610
+  }
+]
