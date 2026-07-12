@@ -3,7 +3,7 @@
     "clinicalLevel": "Paramedic",
     "selectedLevel": true,
     "incrementalParamedicTest": true,
-    "startedAt": "2026-07-11T20:32:19.548093+00:00",
+    "startedAt": "2026-07-12T20:30:34.607118+00:00",
     "visited": [
       "https://clinical.saambulance.sa.gov.au/tabs/home",
       "https://clinical.saambulance.sa.gov.au/tabs/medicines",
@@ -40,6 +40,6 @@
     "changedPages": [],
     "newPages": [],
     "errors": [],
-    "finishedAt": "2026-07-11T20:44:19.298017+00:00"
+    "finishedAt": "2026-07-12T20:42:36.589588+00:00"
   }
 ]
