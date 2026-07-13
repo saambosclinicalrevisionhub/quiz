@@ -75,15 +75,15 @@ def load_json(path, default):
         return default
 
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+        with open(path, "r", encoding="utf-8") as file:
+            return json.load(file)
     except Exception:
         return default
 
 
 def save_json(path, data):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    with open(path, "w", encoding="utf-8") as file:
+        json.dump(data, file, ensure_ascii=False, indent=2)
 
 
 def clean_url(url):
@@ -269,16 +269,16 @@ def strip_superfluous_question_prefix(question):
     text = str(question).strip()
 
     patterns = [
-        r"^according to the sa ambulance service guidelines?,?\s*",
-        r"^according to sa ambulance service guidelines?,?\s*",
-        r"^according to the saas guidelines?,?\s*",
-        r"^according to saas guidelines?,?\s*",
-        r"^according to the guideline,?\s*",
-        r"^according to the source text,?\s*",
-        r"^based on the source text,?\s*",
-        r"^based on the guideline,?\s*",
-        r"^in the sa ambulance service guideline,?\s*",
-        r"^in the saas guideline,?\s*"
+        r"^according to the sa ambulance service guidelines?,?\s+",
+        r"^according to sa ambulance service guidelines?,?\s+",
+        r"^according to the saas guidelines?,?\s+",
+        r"^according to saas guidelines?,?\s+",
+        r"^according to the guideline,?\s+",
+        r"^according to the source text,?\s+",
+        r"^based on the source text,?\s+",
+        r"^based on the guideline,?\s+",
+        r"^in the sa ambulance service guideline,?\s+",
+        r"^in the saas guideline,?\s+"
     ]
 
     for pattern in patterns:
@@ -297,56 +297,168 @@ def clean_generated_text(text):
     cleaned = str(text).strip()
 
     replacements = [
-        (r"Paramedic\s*\(\s*Para\s*\)", "Paramedic"),
-        (r"Intensive Care Paramedic\s*\(\s*ICP\s*\)", "Intensive Care Paramedic"),
-        (r"Extended Care Paramedic\s*\(\s*ECP\s*\)", "Extended Care Paramedic"),
-        (r"Ambulance Officer Extended Scope\s*\(\s*AOES\s*\)", "Ambulance Officer Extended Scope"),
-        (r"Ambulance Officer\s*\(\s*AO\s*\)", "Ambulance Officer"),
-        (r"Ambulance Responder\s*\(\s*AR\s*\)", "Ambulance Responder"),
-        (r"Ambulance Assist\s*\(\s*AA\s*\)", "Ambulance Assist"),
-        (r"\(\s*Para\s*\)", ""),
-        (r"\(\s*ICP\s*\)", ""),
-        (r"\(\s*ECP\s*\)", ""),
-        (r"\(\s*AOES\s*\)", ""),
-        (r"\(\s*AO\s*\)", ""),
-        (r"\(\s*AR\s*\)", ""),
-        (r"\(\s*AA\s*\)", "")
+        (r"Paramedic\s{0,}\(\s{0,}Para\s{0,}\)", "Paramedic"),
+        (r"Intensive Care Paramedic\s{0,}\(\s{0,}ICP\s{0,}\)", "Intensive Care Paramedic"),
+        (r"Extended Care Paramedic\s{0,}\(\s{0,}ECP\s{0,}\)", "Extended Care Paramedic"),
+        (r"Ambulance Officer Extended Scope\s{0,}\(\s{0,}AOES\s{0,}\)", "Ambulance Officer Extended Scope"),
+        (r"Ambulance Officer\s{0,}\(\s{0,}AO\s{0,}\)", "Ambulance Officer"),
+        (r"Ambulance Responder\s{0,}\(\s{0,}AR\s{0,}\)", "Ambulance Responder"),
+        (r"Ambulance Assist\s{0,}\(\s{0,}AA\s{0,}\)", "Ambulance Assist"),
+        (r"\(\s{0,}Para\s{0,}\)", ""),
+        (r"\(\s{0,}ICP\s{0,}\)", ""),
+        (r"\(\s{0,}ECP\s{0,}\)", ""),
+        (r"\(\s{0,}AOES\s{0,}\)", ""),
+        (r"\(\s{0,}AO\s{0,}\)", ""),
+        (r"\(\s{0,}AR\s{0,}\)", ""),
+        (r"\(\s{0,}AA\s{0,}\)", "")
     ]
 
-    for pattern, r*placement in replacements:
-       *cleaned = re.sub(pattern, replacem*nt, cleaned, flags=re.IGNORECASE)
-*    cleaned = re.sub(r"\s+", " ", *leaned)
-    cleaned = re.sub(r"\s+*[,.;:?])", r"\1", cleaned)
-    cle*ned = cleaned.strip()
+    for pattern, replacement in replacements:
+        cleaned = re.sub(pattern, replacement, cleaned, flags=re.IGNORECASE)
 
-    return *leaned
+    cleaned = re.sub(r"\s+", " ", cleaned)
+    cleaned = re.sub(r"\s+([,.;:?])", r"\1", cleaned)
+    cleaned = cleaned.strip()
+
+    return cleaned
 
 
 def clean_question_record(question_record):
-    if not isins*ance(question_record, dict):
-     *  return question_record
+    if not isinstance(question_record, dict):
+        return question_record
 
-    clea*ed_record = dict(question_record)
-*    if "question" in cleaned_recor*:
-        cleaned_record["question"] = clean_generated_text(cleaned_r*cord.get("question", ""))
+    cleaned_record = dict(question_record)
 
-    if *explanation" in cleaned_record:
-  *     cleaned_record["explanation"]*= clean_generated_text(cleaned_rec*rd.get("explanation", ""))
+    if "question" in cleaned_record:
+        cleaned_record["question"] = clean_generated_text(cleaned_record.get("question", ""))
 
-    if*"correctAnswer" in cleaned_record:*        cleaned_record["correctAnswer"] = clean_generated_text(cleane*_record.get("correctAnswer", ""))
-*    if "answer" in cleaned_record:*        cleaned_record["answer"] =*clean_generated_text(cleaned_recor*.get("answer", ""))
+    if "explanation" in cleaned_record:
+        cleaned_record["explanation"] = clean_generated_text(cleaned_record.get("explanation", ""))
 
-    if isinst*nce(cleaned_record.get("options"),*list):
-        cleaned_record["options"] = [
-            clean_generated_text(option)
-            for op*ion in cleaned_record["options"]
- *      ]
+    if "correctAnswer" in cleaned_record:
+        cleaned_record["correctAnswer"] = clean_generated_text(cleaned_record.get("correctAnswer", ""))
 
-    return cleaned_record*
+    if "answer" in cleaned_record:
+        cleaned_record["answer"] = clean_generated_text(cleaned_record.get("answer", ""))
 
-def extract_urls_from_text_and_h*ml(text, html, base_url):
-    foun* = set()
-    combined = text + "\n* + html
+    if isinstance(cleaned_record.get("options"), list):
+        cleaned_options = []
 
-    absolute_matches = re*findall(
+        for option in cleaned_record["options"]:
+            cleaned_options.append(clean_generated_text(option))
+
+        cleaned_record["options"] = cleaned_options
+
+    return cleaned_record
+
+
+def extract_urls_from_text_and_html(text, html, base_url):
+    found = set()
+    combined = text + "\n" + html
+
+    absolute_matches = re.findall(
         r"https://clinical\.saambulance\.sa\.gov\.au/[A-Za-z0-9_\-\/\.\?\=\&%]+",
+        combined
+    )
+
+    relative_matches = re.findall(
+        r"/tabs/[A-Za-z0-9_\-\/\.\?\=\&%]+",
+        combined
+    )
+
+    for match in absolute_matches:
+        url = clean_url(match)
+
+        if useful_url(url):
+            found.add(url)
+
+    for match in relative_matches:
+        url = clean_url(urljoin(base_url, match))
+
+        if useful_url(url):
+            found.add(url)
+
+    return found
+
+
+async def click_text_if_present(page, texts):
+    for text in texts:
+        try:
+            locator = page.get_by_text(text, exact=True)
+
+            if await locator.count() > 0:
+                await locator.first.click(timeout=5000)
+                await page.wait_for_timeout(2500)
+                return True
+
+        except Exception:
+            pass
+
+    return False
+
+
+async def click_disclaimer_ok_if_present(page):
+    return await click_text_if_present(
+        page,
+        [
+            "OK",
+            "Ok",
+            "I agree",
+            "Agree",
+            "Accept",
+            "Continue"
+        ]
+    )
+
+
+async def click_level_on_select_page(page, level):
+    selected = False
+
+    print(f"Trying to select level: {level}")
+
+    try:
+        locator = page.get_by_text(level, exact=True)
+
+        if await locator.count() > 0:
+            await locator.first.click(timeout=7000)
+            await page.wait_for_timeout(4000)
+            selected = True
+            print(f"Selected level by exact text: {level}")
+
+    except Exception as error:
+        print(f"Could not click exact level text {level}: {error}")
+
+    if selected:
+        return True
+
+    try:
+        locator = page.get_by_text(level, exact=False)
+
+        if await locator.count() > 0:
+            await locator.first.click(timeout=7000)
+            await page.wait_for_timeout(4000)
+            selected = True
+            print(f"Selected level by partial text: {level}")
+
+    except Exception as error:
+        print(f"Could not click partial level text {level}: {error}")
+
+    if selected:
+        return True
+
+    try:
+        candidates = await page.locator(
+            "button, a, ion-item, mat-list-item, div, span"
+        ).all()
+
+        for element in candidates[:150]:
+            try:
+                if not await element.is_visible(timeout=500):
+                    continue
+
+                label = await element.inner_text(timeout=1000)
+                label = re.sub(r"\s+", " ", label).strip()
+
+                if label == level:
+                    await element.click(timeout=7000)
+                    await page.wait_for_timeout(4000)
