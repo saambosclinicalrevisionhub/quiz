@@ -1,1 +1,386 @@
-[]
+[
+  {
+    "question": "According to the SA Ambulance Service Adrenaline DMO-002 guideline, which of the following is an indication for Adrenaline administration by a Paramedic (Para)?",
+    "options": [
+      "Severe croup via nebuliser",
+      "Symptomatic bradycardia via IV/IO",
+      "Life threatening asthma via IM",
+      "Significant clinical history and ECG changes suggestive of hyperkalaemia via IV/IO"
+    ],
+    "correctAnswer": "Life threatening asthma via IM",
+    "explanation": "The guideline indicates 'Life threatening asthma' is an indication for 'Para' via 'IM'. Severe croup, symptomatic bradycardia, and hyperkalaemia are listed for ICP scope.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/adrenaline",
+    "sourceTitle": "Adrenaline DMO-002 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:05:05.300626+00:00"
+  },
+  {
+    "question": "According to the SA Ambulance Service Adrenaline DMO-002 guideline, what is stated regarding contraindications for adrenaline in anaphylaxis?",
+    "options": [
+      "Adrenaline is absolutely contraindicated if expired.",
+      "There are no absolute contraindications, even with expired adrenaline.",
+      "Adrenaline is contraindicated in patients with a history of cardiac disease.",
+      "Absolute contraindications exist for paediatric patients."
+    ],
+    "correctAnswer": "There are no absolute contraindications, even with expired adrenaline.",
+    "explanation": "The guideline explicitly states, 'There are no absolute contraindications to adrenaline in anaphylaxis (including the use of expired adrenaline).'",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/adrenaline",
+    "sourceTitle": "Adrenaline DMO-002 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:05:05.300632+00:00"
+  },
+  {
+    "question": "According to the SA Ambulance Service Adrenaline DMO-002 guideline, what is the recommendation for adrenaline administration in a hypothermic cardiac arrest patient with a core body temperature below 30°C?",
+    "options": [
+      "Administer adrenaline at double the usual interval.",
+      "Withhold adrenaline administration.",
+      "Administer adrenaline at the usual interval.",
+      "Administer a reduced dose of adrenaline."
+    ],
+    "correctAnswer": "Withhold adrenaline administration.",
+    "explanation": "The guideline states that for hypothermic cardiac arrests, if the temperature is '< 30°C', drugs should be 'withheld'.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/adrenaline",
+    "sourceTitle": "Adrenaline DMO-002 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:05:05.300635+00:00"
+  },
+  {
+    "question": "According to SA Ambulance Service guidelines, which of the following is a contraindication for Amiodarone administration?",
+    "options": [
+      "Refractory VF/VT in cardiac arrest",
+      "Stable symptomatic VT",
+      "Torsades de Pointe",
+      "Post-ROSC recurrent VF/VT"
+    ],
+    "correctAnswer": "Torsades de Pointe",
+    "explanation": "The source explicitly states that Amiodarone is 'Contraindicated in Torsades de Pointe'.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone",
+    "sourceTitle": "Amiodarone DMO-003 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:05:14.470660+00:00"
+  },
+  {
+    "question": "For paediatrics in cardiac arrest, what is the recommended dose of Amiodarone and how should it be prepared?",
+    "options": [
+      "10 mg/kg diluted in saline",
+      "5 mg/kg neat (no dilution needed)",
+      "5 mg/kg diluted in 100 mL saline",
+      "10 mg/kg neat (no dilution needed)"
+    ],
+    "correctAnswer": "5 mg/kg neat (no dilution needed)",
+    "explanation": "The source specifies, 'For paediatrics in cardiac arrest: administer age appropriate dose (5 mg/kg) neat i.e. no dilution needed'.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone",
+    "sourceTitle": "Amiodarone DMO-003 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:05:14.470666+00:00"
+  },
+  {
+    "question": "When administering Amiodarone, what significant adverse effect should be closely monitored, especially with rapid administration?",
+    "options": [
+      "Hypertension and tachycardia",
+      "Severe hypotension and circulatory collapse",
+      "Hyperglycemia and seizures",
+      "Bronchospasm and rash"
+    ],
+    "correctAnswer": "Severe hypotension and circulatory collapse",
+    "explanation": "The guidelines advise to 'Monitor BP closely as severe hypotension and circulatory collapse can occur with rapid administration'.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/amiodarone",
+    "sourceTitle": "Amiodarone DMO-003 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:05:14.470669+00:00"
+  },
+  {
+    "question": "According to the SA Ambulance Service DMO-004 guideline, what is a primary indication for Aspirin administration by a Paramedic?",
+    "options": [
+      "Severe headache",
+      "Cardiac-related chest pain or discomfort / ACS",
+      "Minor sprains",
+      "Allergic reaction"
+    ],
+    "correctAnswer": "Cardiac-related chest pain or discomfort / ACS",
+    "explanation": "The SA Ambulance Service DMO-004 guideline explicitly lists 'Cardiac-related chest pain or discomfort / ACS' as an indication for Paramedics.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
+    "sourceTitle": "Aspirin DMO-004 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:12.823222+00:00"
+  },
+  {
+    "question": "Which of the following is a contraindication for Aspirin administration by a Paramedic, according to the SA Ambulance Service DMO-004 guideline?",
+    "options": [
+      "History of mild rash to aspirin",
+      "Patient has already taken aspirin earlier today",
+      "Severe active bleeding",
+      "Onset of action approximately 10 minutes"
+    ],
+    "correctAnswer": "Severe active bleeding",
+    "explanation": "The guideline states that Aspirin is contraindicated in 'severe active bleeding'. A history of hypersensitivity (i.e. rash) may still allow administration if the benefit in ACS is considered, and it is safe if the patient has already taken aspirin earlier.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
+    "sourceTitle": "Aspirin DMO-004 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:12.823229+00:00"
+  },
+  {
+    "question": "According to the SA Ambulance Service DMO-004 guideline, which of the following is a common adverse effect of Aspirin?",
+    "options": [
+      "Decreased bleeding time",
+      "Severe allergic reaction",
+      "GIT irritation",
+      "Onset of action within 1 minute"
+    ],
+    "correctAnswer": "GIT irritation",
+    "explanation": "The guideline lists 'Common adverse effects include GIT irritation and increased bleeding time.' Onset of action is approximately 10 minutes, not 1 minute.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/aspirin",
+    "sourceTitle": "Aspirin DMO-004 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:12.823232+00:00"
+  },
+  {
+    "question": "According to the SA Ambulance Service guidelines, what is the primary indication for paramedics to administer benzylpenicillin?",
+    "options": [
+      "Suspected pneumonia",
+      "Suspected meningococcal septicaemia",
+      "Severe cellulitis",
+      "Urinary tract infection"
+    ],
+    "correctAnswer": "Suspected meningococcal septicaemia",
+    "explanation": "The source text explicitly states 'Suspected meningococcal septicaemia' as an indication for paramedics (Para IM/IV).",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/benzylpenicillin",
+    "sourceTitle": "Benzylpenicillin DMO-006 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:05:23.170737+00:00"
+  },
+  {
+    "question": "Which of the following is considered a relative contraindication for benzylpenicillin administration?",
+    "options": [
+      "History of mild allergic rash to penicillin",
+      "History of Type 1 (immediate) hypersensitivity to penicillin",
+      "Current pregnancy",
+      "Age over 70 years"
+    ],
+    "correctAnswer": "History of Type 1 (immediate) hypersensitivity to penicillin",
+    "explanation": "The guidelines state 'Relative contraindication in patients with a history of Type 1 (immediate) hypersensitivity to penicillin (immediate urticaria, bronchospasm, anaphylaxis)'.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/benzylpenicillin",
+    "sourceTitle": "Benzylpenicillin DMO-006 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:05:23.170745+00:00"
+  },
+  {
+    "question": "What is a potential adverse effect of rapid administration of large doses of IV benzylpenicillin?",
+    "options": [
+      "Severe hypertension",
+      "Hypoglycaemia",
+      "Seizures",
+      "Bradycardia"
+    ],
+    "correctAnswer": "Seizures",
+    "explanation": "The source text warns that 'rapid administration of large doses may result in seizures'.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/benzylpenicillin",
+    "sourceTitle": "Benzylpenicillin DMO-006 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:05:23.170748+00:00"
+  },
+  {
+    "question": "For which of the following indications is Carbetocin appropriate for a Paramedic to administer?",
+    "options": [
+      "First stage labour",
+      "Prior to delivery of all fetuses",
+      "Primary Postpartum Haemorrhage (PPH)",
+      "Second stage labour"
+    ],
+    "correctAnswer": "Primary Postpartum Haemorrhage (PPH)",
+    "explanation": "The source states Carbetocin is indicated for Primary PPH and modified active third stage management post-delivery, but *not* prior to delivery of all fetuses or in first/second stage labour.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
+    "sourceTitle": "Carbetocin DMO-040 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:21.546828+00:00"
+  },
+  {
+    "question": "A Paramedic is considering administering Carbetocin. Which of the following patient factors represents a contraindication?",
+    "options": [
+      "Patient with a history of pre-eclampsia",
+      "Patient is 18 years old",
+      "Patient has an unknown number of fetuses",
+      "Patient with a history of asthma"
+    ],
+    "correctAnswer": "Patient has an unknown number of fetuses",
+    "explanation": "The source lists 'Unknown number of fetus or unclear ante-natal care' as a contraindication. Pre-eclampsia and asthma are precautions, and the age contraindication is for patients <16 years old.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
+    "sourceTitle": "Carbetocin DMO-040 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:21.546834+00:00"
+  },
+  {
+    "question": "According to the SA Ambulance Service guidelines, what is a key characteristic of Carbetocin administration or action?",
+    "options": [
+      "It requires dilution for intramuscular (IM) administration.",
+      "It can be given as multiple doses if required.",
+      "It provides sustained uterine contractions for approximately 11 minutes immediately after administration.",
+      "It is contraindicated in patients with a history of migraine."
+    ],
+    "correctAnswer": "It provides sustained uterine contractions for approximately 11 minutes immediately after administration.",
+    "explanation": "The source states 'Immediate effect: sustained uterine contractions for approx. 11 minutes'. It also notes 'Nil dilution required for IM administration' and 'Carbetocin is a single dose only'. Migraine is listed as a precaution, not a contraindication.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/carbetocin",
+    "sourceTitle": "Carbetocin DMO-040 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:21.546837+00:00"
+  },
+  {
+    "question": "According to the SA Ambulance Service DMO-041 guideline, which of the following is a contraindication for Ceftriaxone administration?",
+    "options": [
+      "History of type 1 (immediate) hypersensitivity to penicillin",
+      "Full term neonates with jaundice",
+      "Preterm neonates",
+      "Suspected meningococcal septicaemia"
+    ],
+    "correctAnswer": "Preterm neonates",
+    "explanation": "The source text explicitly lists 'Preterm neonates' as a contraindication. A history of type 1 hypersensitivity to penicillin and full term neonates with jaundice are listed as precautions (relative contraindications), while suspected meningococcal septicaemia is an indication.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ceftriaxone",
+    "sourceTitle": "Ceftriaxone DMO-041 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:05:34.793170+00:00"
+  },
+  {
+    "question": "When preparing Ceftriaxone 1 g for intravenous (IV) administration, what is the correct dilution and administration time?",
+    "options": [
+      "Dilute with 3.5 mL sodium chloride 0.9% and administer slowly over 4 minutes.",
+      "Dilute with 9.5 mL sodium chloride 0.9% to make 10 mL (100 mg/mL) and administer slowly over 4 minutes.",
+      "Dilute with 9.5 mL sodium chloride 0.9% to make 10 mL (100 mg/mL) and administer rapidly.",
+      "Dilute with 3.5 mL sodium chloride 0.9% and administer rapidly."
+    ],
+    "correctAnswer": "Dilute with 9.5 mL sodium chloride 0.9% to make 10 mL (100 mg/mL) and administer slowly over 4 minutes.",
+    "explanation": "For IV/IO preparation, the guideline states to 'Dilute with 9.5 mL sodium chloride 0.9% to make 10 mL (100 mg/mL)' and 'Administer total dose over slowly over 4 minutes'.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ceftriaxone",
+    "sourceTitle": "Ceftriaxone DMO-041 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:05:34.793176+00:00"
+  },
+  {
+    "question": "According to the SA Ambulance Service DMO-041 guideline, which of the following is an indication for a Paramedic (Para) to administer Ceftriaxone?",
+    "options": [
+      "Suspected meningococcal septicaemia via IM route only.",
+      "Septic shock unresponsive to IV fluid administration and > 60 minutes to hospital via IV route.",
+      "Paediatric septic shock via IV/IO/IM route.",
+      "Any patient with a known cephalosporin allergy."
+    ],
+    "correctAnswer": "Septic shock unresponsive to IV fluid administration and > 60 minutes to hospital via IV route.",
+    "explanation": "For a Paramedic (Para), the indications listed are 'Suspected meningococcal septicaemia' via IV/IM, and 'Septic shock unresponsive to IV fluid administration and > 60 minutes to hospital' via IV. Paediatric septic shock via IV/IO/IM is for ICP, and cephalosporin allergy is a contraindication.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/ceftriaxone",
+    "sourceTitle": "Ceftriaxone DMO-041 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:05:34.793178+00:00"
+  },
+  {
+    "question": "According to SA Ambulance Service guidelines, which of the following is an indication for Clonazepam in palliative care?",
+    "options": [
+      "Acute severe pain management",
+      "Nausea and vomiting refractory to antiemetics",
+      "Anxiety",
+      "Status epilepticus"
+    ],
+    "correctAnswer": "Anxiety",
+    "explanation": "The source text explicitly states 'Palliative care anxiety' as an indication for Clonazepam.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
+    "sourceTitle": "Clonazepam DMO-032 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:29.463471+00:00"
+  },
+  {
+    "question": "When administering Clonazepam, how should the dosage be written according to SA Ambulance Service guidelines?",
+    "options": [
+      "In milligrams (mg)",
+      "In millilitres (mL)",
+      "In drops",
+      "In units"
+    ],
+    "correctAnswer": "In drops",
+    "explanation": "The guidelines state, 'Dosage must be written in drops rather than mg (each drop is 0.1 mg).'",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
+    "sourceTitle": "Clonazepam DMO-032 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:29.463479+00:00"
+  },
+  {
+    "question": "Which of the following patient factors requires cautionary use of Clonazepam according to SA Ambulance Service guidelines?",
+    "options": [
+      "History of mild hypertension",
+      "Known allergy to penicillin",
+      "Respiratory depression or reduced respiratory drive",
+      "Mild headache"
+    ],
+    "correctAnswer": "Respiratory depression or reduced respiratory drive",
+    "explanation": "The guidelines advise 'Cautionary use in patient with respiratory depression or reduced respiratory drive (disease, sleep apnea).'",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/clonazepam",
+    "sourceTitle": "Clonazepam DMO-032 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:40:29.463482+00:00"
+  },
+  {
+    "question": "What is the primary indication for Cophenylcaine nasal spray according to SA Ambulance Service guidelines?",
+    "options": [
+      "Pain relief for epistaxis",
+      "Topical anaesthesia prior to nasopharyngeal airway (NPA) insertion",
+      "Decongestion for sinusitis",
+      "Local anaesthesia for minor lacerations"
+    ],
+    "correctAnswer": "Topical anaesthesia prior to nasopharyngeal airway (NPA) insertion",
+    "explanation": "The source explicitly states 'Topical anaesthesia prior to nasopharyngeal airway (NPA) insertion' as the indication for Cophenylcaine.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte",
+    "sourceTitle": "Cophenylcaine DMO-007 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:05:44.911261+00:00"
+  },
+  {
+    "question": "Which patient factor is a contraindication for the administration of Cophenylcaine nasal spray?",
+    "options": [
+      "History of hypertension",
+      "Type 1 (immediate) hypersensitivity reactions to sulfites",
+      "Pregnancy",
+      "Concurrent use of beta-blockers"
+    ],
+    "correctAnswer": "Type 1 (immediate) hypersensitivity reactions to sulfites",
+    "explanation": "The formulation contains sodium metabisulfite, and patients with Type 1 (immediate) hypersensitivity reactions to sulfites (typically asthmatics) should not be administered this spray.",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte",
+    "sourceTitle": "Cophenylcaine DMO-007 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:05:44.911268+00:00"
+  },
+  {
+    "question": "When administering Cophenylcaine prior to nasopharyngeal airway (NPA) insertion, how long should paramedics ideally wait for onset of action, if possible?",
+    "options": [
+      "5-10 minutes",
+      "30 seconds",
+      "1-2 minutes",
+      "15-20 minutes"
+    ],
+    "correctAnswer": "1-2 minutes",
+    "explanation": "The guidelines state to 'Allow 1-2 mins (where possible) for onset of action to allow ease of NPA insertion.'",
+    "clinicalLevel": "Paramedic",
+    "sourceUrl": "https://clinical.saambulance.sa.gov.au/tabs/medicines/page/co-phenylcaine-forte",
+    "sourceTitle": "Cophenylcaine DMO-007 | SA Ambulance Service",
+    "sourceType": "Medicine",
+    "updatedAt": "2026-07-09T07:05:44.911271+00:00"
+  }
+]
