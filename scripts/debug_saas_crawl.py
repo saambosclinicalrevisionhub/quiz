@@ -4,11 +4,24 @@ from playwright.async_api import async_playwright
 
 BASE_URL = "https://clinical.saambulance.sa.gov.au"
 URLS = [
-    f"{BASE_URL}/tabs/home",
-    f"{BASE_URL}/tabs/medicines",
-    f"{BASE_URL}/tabs/calculators",
+    (f"{BASE_URL}/tabs/home", "page_1"),
+    (f"{BASE_URL}/tabs/medicines", "page_2"),
+    (f"{BASE_URL}/tabs/calculators", "page_3"),
 ]
 OUT = Path("debug_saas")
+
+async def safe_inner_text(locator, timeout=1000):
+    try:
+        return (await locator.inner_text(timeout=timeout)).strip()
+    except Exception:
+        return ""
+
+async def safe_attribute(locator, name, timeout=1000):
+    try:
+        value = await locator.get_attribute(name, timeout=timeout)
+        return value or ""
+    except Exception:
+        return ""
 
 async def inspect_page(page, url, name):
     print(f"Opening {url}", flush=True)
@@ -32,22 +45,17 @@ async def inspect_page(page, url, name):
     except Exception as exc:
         body_html_error = repr(exc)
 
-    buttons = []
+    controls = []
+    selector = "button, [role=button], a, ion-button, mat-select, select"
     try:
-        count = await page.locator("button, [role=button], a, ion-button, mat-select, select").count()
+        count = await page.locator(selector).count()
         for index in range(min(count, 80)):
-            locator = page.locator("button, [role=button], a, ion-button, mat-select, select").nth(index)
-            try:
-                text = (await locator.inner_text(timeout=1000)).strip()
-            except Exception:
-                text = ""
-            try:
-                href = await locator.get_attribute("href", timeout=1000)
-            except Exception:
-                href = ""
-            buttons.append(f"{index}: text={text!r} href={href!r}")
+            locator = page.locator(selector).nth(index)
+            text = await safe_inner_text(locator)
+            href = await safe_attribute(locator, "href")
+            controls.append(f"{index}: text={text!r} href={href!r}")
     except Exception as exc:
-        buttons.append(f"ERROR reading controls: {exc!r}")
+        controls.append(f"ERROR reading controls: {exc!r}")
 
     links = []
     try:
@@ -63,47 +71,47 @@ async def inspect_page(page, url, name):
 
     await page.screenshot(path=str(screenshot_path), full_page=True)
     html_path.write_text(body_html, encoding="utf-8")
-    text_path.write_text(
-        "\n".join([
-            f"url: {url}",
-            f"current_url: {current_url}",
-            f"title: {title}",
-            f"body_text_length: {len(body_text)}",
-            f"body_html_length: {len(body_html)}",
-            f"body_text_error: {body_text_error}",
-            f"body_html_error: {body_html_error}",
-            "",
-            "FIRST 4000 BODY TEXT CHARS:",
-            body_text[:4000],
-            "",
-            "VISIBLE CONTROLS:",
-            *buttons,
-            "",
-         *  "LINKS:",
-            *links,
-  *     ]),
-        encoding="utf-8",*    )
 
-    print(f"{name}: title={*itle!r} body_text_length={len(body*text)} body_html_length={len(body_*tml)}", flush=True)
-    print(f"Sa*ed {screenshot_path}, {html_path},*{text_path}", flush=True)
+    lines = []
+    lines.append(f"url: {url}")
+    lines.append(f"current_url: {current_url}")
+    lines.append(f"title: {title}")
+    lines.append(f"body_text_length: {len(body_text)}")
+    lines.append(f"body_html_length: {len(body_html)}")
+    lines.append(f"body_text_error: {body_text_error}")
+    lines.append(f"body_html_error: {body_html_error}")
+    lines.append("")
+    lines.append("FIRST 4000 BODY TEXT CHARS:")
+    lines.append(body_text[:4000])
+    lines.append("")
+    lines.append("VISIBLE CONTROLS:")
+    lines.extend(controls)
+    lines.append("")
+    lines.append("LINKS:")
+    lines.extend(links)
 
-async d*f main():
-    OUT.mkdir(exist_ok=T*ue)
-    async with async_playwrigh*() as playwright:
-        browser * await playwright.chromium.launch(*eadless=True)
-        context = aw*it browser.new_context(
-          * viewport={"width": 1440, "height"* 1200},
+    text_path.write_text("\n".join(lines), encoding="utf-8")
+
+    print(f"{name}: title={title!r} body_text_length={len(body_text)} body_html_length={len(body_html)}", flush=True)
+    print(f"Saved {screenshot_path}, {html_path}, {text_path}", flush=True)
+
+async def main():
+    OUT.mkdir(exist_ok=True)
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(headless=True)
+        context = await browser.new_context(
+            viewport={"width": 1440, "height": 1200},
             user_agent=(
- *              "Mozilla/5.0 (Window* NT 10.0; Win64; x64) "
-          *     "AppleWebKit/537.36 (KHTML, l*ke Gecko) "
-                "Chrom*/126.0.0.0 Safari/537.36"
-        *   ),
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/126.0.0.0 Safari/537.36"
+            ),
         )
-        page = awa*t context.new_page()
-        for i*dex, url in enumerate(URLS, start=*):
-            await inspect_page(*age, url, f"page_{index}")
-       *await context.close()
-        awai* browser.close()
+        page = await context.new_page()
+        for url, name in URLS:
+            await inspect_page(page, url, name)
+        await context.close()
+        await browser.close()
 
-if __name__ == "*_main__":
+if __name__ == "__main__":
     asyncio.run(main())
