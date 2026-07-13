@@ -322,7 +322,7 @@ def clean_generated_text(text):
     return *leaned
 
 
-def clean_question_record*question_record):
+def clean_question_record(question_record):
     if not isins*ance(question_record, dict):
      *  return question_record
 
