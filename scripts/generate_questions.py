@@ -739,6 +739,20 @@ async def main() -> None:
             "lastSeen": int(time.time()),
         }
 
+    minimum_safe_count = 1
+    if existing_questions_raw:
+        minimum_safe_count = max(1, int(len(existing_questions_raw) * 0.25))
+
+    if existing_questions_raw and len(deduped) < minimum_safe_count:
+        log(
+            "Safety stop: generated question list is unexpectedly small. "
+            f"Existing questions: {len(existing_questions_raw)}. "
+            f"New questions: {len(deduped)}. "
+            "Keeping existing questions.json unchanged."
+        )
+        log("Not writing questions.json or page_records.json.")
+        return
+
     save_json(QUESTIONS_FILE, deduped)
     save_json(PAGE_RECORDS_FILE, new_page_records)
 
