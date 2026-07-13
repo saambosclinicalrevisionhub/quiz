@@ -215,6 +215,52 @@
         .replace(/'/g, "&#039;");
     }
 
+    function getQuestionLevel(question) {
+      return question.clinical_level || question.clinicalLevel || "";
+    }
+
+    function getQuestionAnswer(question) {
+      return question.answer || question.correctAnswer || "";
+    }
+
+    function getQuestionSource(question) {
+      return question.source || question.sourceUrl || "";
+    }
+
+    function getQuestionSourceTitle(question) {
+      return question.source_title || question.sourceTitle || getQuestionSource(question);
+    }
+
+    function getQuestionCategory(question) {
+      return question.content_category || question.contentCategory || question.sourceType || "";
+    }
+
+    function getQuestionOptions(question) {
+      if (Array.isArray(question.options)) {
+        return question.options;
+      }
+
+      return [];
+    }
+
+    function getQuestionType(question) {
+      if (question.type) {
+        return question.type;
+      }
+
+      const options = getQuestionOptions(question);
+
+      if (
+        options.length === 2 &&
+        options.includes("True") &&
+        options.includes("False")
+      ) {
+        return "tf";
+      }
+
+      return "mcq";
+    }
+
     function getSelectedLevel() {
       return levelSelect.value;
     }
@@ -226,8 +272,8 @@
         return [];
       }
 
-      return questions.filter(function(q) {
-        return q.clinical_level === selectedLevel;
+      return questions.filter(function(question) {
+        return getQuestionLevel(question) === selectedLevel;
       });
     }
 
@@ -270,41 +316,41 @@
         return;
       }
 
-      /*
-        Hide the yellow disclaimer box once the first actual question is generated.
-      */
       if (disclaimerBox) {
         disclaimerBox.style.display = "none";
       }
 
       currentQuestion = filtered[Math.floor(Math.random() * filtered.length)];
 
+      const category = getQuestionCategory(currentQuestion);
+      const options = getQuestionOptions(currentQuestion);
+      const questionType = getQuestionType(currentQuestion);
+
       let html = "";
 
-      if (currentQuestion.content_category) {
-        html += "<div class='category'>" + escapeHtml(currentQuestion.content_category) + "</div>";
+      if (category) {
+        html += "<div class='category'>" + escapeHtml(category) + "</div>";
       }
 
       html += "<h2>Question</h2>";
       html += "<p><strong>" + escapeHtml(currentQuestion.question) + "</strong></p>";
 
-      if (currentQuestion.type === "mcq" && Array.isArray(currentQuestion.options)) {
+      if (questionType === "tf") {
+        html += "<div>";
+        html += "<button type='button' class='option' data-index='0'>True</button>";
+        html += "<button type='button' class='option' data-index='1'>False</button>";
+        html += "</div>";
+      } else {
         html += "<div>";
 
-        currentQuestion.options.forEach(function(option) {
-          html += "<button type='button' class='option' data-answer='" +
-            escapeHtml(option) + "'>" +
+        options.forEach(function(option, index) {
+          html += "<button type='button' class='option' data-index='" +
+            index +
+            "'>" +
             escapeHtml(option) +
             "</button>";
         });
 
-        html += "</div>";
-      }
-
-      if (currentQuestion.type === "tf") {
-        html += "<div>";
-        html += "<button type='button' class='option' data-answer='True'>True</button>";
-        html += "<button type='button' class='option' data-answer='False'>False</button>";
         html += "</div>";
       }
 
@@ -326,13 +372,29 @@
         return;
       }
 
-      const selectedAnswer = button.getAttribute("data-answer");
-      const correctAnswer = currentQuestion.answer;
+      const questionType = getQuestionType(currentQuestion);
+      const correctAnswer = getQuestionAnswer(currentQuestion);
+
+      let selectedAnswer = "";
+
+      if (questionType === "tf") {
+        selectedAnswer = button.innerText.trim();
+      } else {
+        const selectedIndex = Number(button.getAttribute("data-index"));
+        selectedAnswer = getQuestionOptions(currentQuestion)[selectedIndex];
+      }
 
       const optionButtons = document.querySelectorAll(".option");
 
       optionButtons.forEach(function(btn) {
-        const answer = btn.getAttribute("data-answer");
+        let answer = "";
+
+        if (questionType === "tf") {
+          answer = btn.innerText.trim();
+        } else {
+          const index = Number(btn.getAttribute("data-index"));
+          answer = getQuestionOptions(currentQuestion)[index];
+        }
 
         if (answer === correctAnswer) {
           btn.classList.add("correct");
@@ -358,10 +420,13 @@
         feedback += "<br><br><strong>Why:</strong> " + escapeHtml(currentQuestion.explanation);
       }
 
-      if (currentQuestion.source) {
+      const source = getQuestionSource(currentQuestion);
+      const sourceTitle = getQuestionSourceTitle(currentQuestion);
+
+      if (source) {
         feedback += "<div class='source'>";
-        feedback += "Source: <a href='" + escapeHtml(currentQuestion.source) + "' target='_blank' rel='noopener'>";
-        feedback += escapeHtml(currentQuestion.source_title || currentQuestion.source);
+        feedback += "Source: <a href='" + escapeHtml(source) + "' target='_blank' rel='noopener'>";
+        feedback += escapeHtml(sourceTitle);
         feedback += "</a>";
         feedback += "</div>";
       }
@@ -377,6 +442,11 @@
         loadQuestion();
       } else {
         newQuestionButton.disabled = true;
+
+        if (disclaimerBox) {
+          disclaimerBox.style.display = "block";
+        }
+
         questionBox.innerHTML =
           "<p class='status'>Please select your clinical level to begin.</p>";
       }
