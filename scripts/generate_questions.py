@@ -8,14 +8,13 @@ import sys
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import urldefrag, urljoin, urlparse, urlunparse, parse_qsl, urlencode
+from urllib.parse import parse_qsl, urlencode, urldefrag, urljoin, urlparse, urlunparse
 
 import requests
-from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
-
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
+from playwright.async_api import async_playwright
 
 BASE_URL = "https://clinical.saambulance.sa.gov.au"
-
 START_URLS = [
     f"{BASE_URL}/tabs/home",
     f"{BASE_URL}/tabs/medicines",
@@ -40,20 +39,17 @@ CRAWL_FILE = DATA_DIR / "crawled_pages.json"
 MAX_PAGES_PER_LEVEL = int(os.getenv("MAX_PAGES_PER_LEVEL", "10"))
 MIN_TEXT_CHARS = int(os.getenv("MIN_TEXT_CHARS", "500"))
 QUESTIONS_PER_PAGE = int(os.getenv("QUESTIONS_PER_PAGE", "2"))
-BATCH_SIZE = int(os.getenv("GEMINI_BATCH_SIZE", "3"))
-GEMINI_DELAY_SECONDS = float(os.getenv("GEMINI_DELAY_SECONDS", "20"))
+GEMINI_BATCH_SIZE = int(os.getenv("GEMINI_BATCH_SIZE", "3"))
+GEMINI_DELAY_SECONDS = float(os.getenv("GEMINI_DELAY_SECONDS", "25"))
 GEMINI_MAX_RETRIES = int(os.getenv("GEMINI_MAX_RETRIES", "3"))
 REQUEST_TIMEOUT_SECONDS = int(os.getenv("REQUEST_TIMEOUT_SECONDS", "90"))
 PAGE_TIMEOUT_MS = int(os.getenv("PAGE_TIMEOUT_MS", "60000"))
 MAX_DISCOVERY_URLS_PER_LEVEL = int(os.getenv("MAX_DISCOVERY_URLS_PER_LEVEL", "250"))
 
 GEMINI_MODELS = [
-    m.strip()
-    for m in os.getenv(
-        "GEMINI_MODELS",
-        "gemini-2.5-flash,gemini-2.0-flash"
-    ).split(",")
-    if m.strip()
+    model.strip()
+    for model in os.getenv("GEMINI_MODELS", "gemini-2.5-flash,gemini-2.0-flash").split(",")
+    if model.strip()
 ]
 
 
@@ -64,7 +60,6 @@ def log(message: str) -> None:
 def load_json(path: Path, default: Any) -> Any:
     if not path.exists():
         return default
-
     try:
         with path.open("r", encoding="utf-8") as f:
             return json.load(f)
@@ -75,13 +70,11 @@ def load_json(path: Path, default: Any) -> Any:
 
 def save_json(path: Path, data: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    with tmp.open("w", encoding="utf-8") as f:
+    tmp_path = path.with_suffix(path.suffix + ".tmp")
+    with tmp_path.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
         f.write("\n")
-
-    tmp.replace(path)
+    tmp_path.replace(path)
 
 
 def normalise_space(text: str) -> str:
@@ -92,24 +85,19 @@ def clean_text(text: str) -> str:
     text = text or ""
     text = text.replace("\u00a0", " ")
     text = re.sub(r"\s+", " ", text)
-
-    noise = [
+    for noise in [
         "Clinical Practice Guidelines",
         "SA Ambulance Service",
         "Skip to content",
         "Open menu",
         "Close menu",
-    ]
-
-    for item in noise:
-        text = text.replace(item, " ")
-
+    ]:
+        text = text.replace(noise, " ")
     return normalise_space(text)
 
 
 def clean_generation_text(text: str) -> str:
-    text = text or ""
-
+    text = str(text or "")
     replacements = {
         "Ambulance Assist (AA)": "Ambulance Assist",
         "Ambulance Responder (AR)": "Ambulance Responder",
@@ -117,52 +105,35 @@ def clean_generation_text(text: str) -> str:
         "Ambulance Officer Extended Scope (AOES)": "Ambulance Officer Extended Scope",
         "Paramedic (P)": "Paramedic",
         "Paramedic(P)": "Paramedic",
+        "Paramedic (Para)": "Paramedic",
+        "Paramedic(Para)": "Paramedic",
         "Intensive Care Paramedic (ICP)": "Intensive Care Paramedic",
         "Intensive Care Paramedic(ICP)": "Intensive Care Paramedic",
         "Extended Care Paramedic (ECP)": "Extended Care Paramedic",
         "Extended Care Paramedic(ECP)": "Extended Care Paramedic",
     }
-
     for old, new in replacements.items():
         text = text.replace(old, new)
-
-    text = re.sub(
-        r"\bParamedic\s*\(\s*Para\s*\)",
-        "Paramedic",
-        text,
-        flags=re.IGNORECASE,
-    )
-
-    text = re.sub(
-        r"\b([A-Za-z ]+)\s*\(\s*(AA|AR|AO|AOES|P|ICP|ECP)\s*\)",
-        r"\1",
-        text,
-    )
-
+    text = re.sub(r"\bParamedic\s*\(\s*Para\s*\)", "Paramedic", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b([A-Za-z ]+?)\s*\(\s*(AA|AR|AO|AOES|P|ICP|ECP)\s*\)", r"\1", text)
     return normalise_space(text)
 
 
 def canonical_url(url: str) -> str:
     if not url:
         return ""
-
-    url, _fragment = urldefrag(url)
+    url, _fragment = urldefrag(str(url))
     url = url.replace("&amp;", "&")
-
     parsed = urlparse(url)
-
     scheme = parsed.scheme or "https"
     netloc = parsed.netloc or urlparse(BASE_URL).netloc
     path = re.sub(r"/+$", "", parsed.path or "/")
-
     query_pairs = []
     for key, value in parse_qsl(parsed.query, keep_blank_values=True):
         if key.lower() in {"title", "ref"}:
             continue
         query_pairs.append((key, value))
-
     query = urlencode(query_pairs, doseq=True)
-
     return urlunparse((scheme, netloc, path, "", query, ""))
 
 
@@ -176,13 +147,10 @@ def page_hash(text: str) -> str:
 
 def infer_source_type(url: str, title: str) -> str:
     lower = f"{url} {title}".lower()
-
     if "/medicines" in lower:
         return "Medicine"
-
     if "/calculators" in lower or "calculator" in lower:
         return "Calculator"
-
     return "Clinical Practice Guideline"
 
 
@@ -190,11 +158,7 @@ def title_from_url(url: str) -> str:
     path = urlparse(url).path.rstrip("/")
     slug = path.split("/")[-1] if path else "Guideline"
     slug = re.sub(r"-[a-z]{1,5}$", "", slug, flags=re.IGNORECASE)
-
-    return " ".join(
-        word.capitalize()
-        for word in slug.replace("-", " ").split()
-    ) or "Guideline"
+    return " ".join(word.capitalize() for word in slug.replace("-", " ").split()) or "Guideline"
 
 
 def is_same_site_url(url: str) -> bool:
@@ -206,25 +170,14 @@ def is_same_site_url(url: str) -> bool:
 
 
 def is_candidate_detail_url(url: str) -> bool:
-    url_l = url.lower()
-
-    return "/page/" in url_l and any(
-        tab in url_l
-        for tab in ["/tabs/home", "/tabs/medicines", "/tabs/calculators"]
+    url_lower = url.lower()
+    return "/page/" in url_lower and any(
+        part in url_lower for part in ["/tabs/home", "/tabs/medicines", "/tabs/calculators"]
     )
 
 
 async def select_clinical_level(page, clinical_level: str) -> bool:
     log(f"Trying to select level: {clinical_level}")
-
-    selectors = [
-        "button",
-        "[role=button]",
-        "mat-select",
-        "select",
-        ".mat-mdc-select",
-        ".mat-select",
-    ]
 
     try:
         exact = page.get_by_text(clinical_level, exact=True)
@@ -239,28 +192,22 @@ async def select_clinical_level(page, clinical_level: str) -> bool:
     except Exception:
         pass
 
+    selectors = ["button", "[role=button]", "mat-select", "select", ".mat-mdc-select", ".mat-select"]
     for selector in selectors:
         try:
             elements = page.locator(selector)
             count = await elements.count()
-
-            for i in range(min(count, 20)):
-                element = elements.nth(i)
-
+            for index in range(min(count, 20)):
+                element = elements.nth(index)
                 try:
                     text = normalise_space(await element.inner_text(timeout=1000))
                 except Exception:
                     text = ""
 
-                if (
-                    clinical_level.lower() in text.lower()
-                    or "clinical" in text.lower()
-                    or "level" in text.lower()
-                ):
+                if clinical_level.lower() in text.lower() or "clinical" in text.lower() or "level" in text.lower():
                     try:
                         await element.click(timeout=3000)
                         await page.wait_for_timeout(500)
-
                         option = page.get_by_text(clinical_level, exact=True)
                         if await option.count() > 0:
                             await option.first().click(timeout=5000)
@@ -286,7 +233,6 @@ async def extract_page_text_and_links(page, url: str) -> Tuple[str, str, List[st
     await page.wait_for_timeout(1200)
 
     title = ""
-
     for selector in ["h1", "h2", "ion-title", ".title", "title"]:
         try:
             loc = page.locator(selector)
@@ -303,28 +249,20 @@ async def extract_page_text_and_links(page, url: str) -> Tuple[str, str, List[st
         except Exception:
             title = title_from_url(url)
 
-    texts = []
-    selectors = ["main", "ion-content", "article", ".content", "body"]
-
-    for selector in selectors:
+    best_text = ""
+    for selector in ["main", "ion-content", "article", ".content", "body"]:
         try:
             loc = page.locator(selector)
             if await loc.count() > 0:
                 candidate = clean_text(await loc.first().inner_text(timeout=5000))
-                if len(candidate) > len(" ".join(texts)):
-                    texts = [candidate]
+                if len(candidate) > len(best_text):
+                    best_text = candidate
         except Exception:
             continue
 
-    text = clean_text(" ".join(texts))
-
-    links: List[str] = []
-
+    links = []
     try:
-        hrefs = await page.locator("a[href]").evaluate_all(
-            "els => els.map(a => a.href)"
-        )
-
+        hrefs = await page.locator("a[href]").evaluate_all("els => els.map(a => a.href)")
         for href in hrefs:
             if href and is_same_site_url(href):
                 links.append(canonical_url(urljoin(BASE_URL, href)))
@@ -332,11 +270,8 @@ async def extract_page_text_and_links(page, url: str) -> Tuple[str, str, List[st
         pass
 
     try:
-        body_links = re.findall(
-            r"https://clinical\.saambulance\.sa\.gov\.au/[^\s\"'<>]+",
-            await page.content(),
-        )
-
+        content = await page.content()
+        body_links = re.findall(r"https://clinical\.saambulance\.sa\.gov\.au/[^\s\"'<>]+", content)
         for href in body_links:
             if is_same_site_url(href):
                 links.append(canonical_url(href))
@@ -345,63 +280,45 @@ async def extract_page_text_and_links(page, url: str) -> Tuple[str, str, List[st
 
     seen = set()
     unique_links = []
-
     for link in links:
         if link not in seen:
             seen.add(link)
             unique_links.append(link)
 
-    return title or title_from_url(url), text, unique_links
+    return title or title_from_url(url), best_text, unique_links
 
 
 async def crawl_level(browser, clinical_level: str) -> List[Dict[str, Any]]:
-    context = await browser.new_context(
-        viewport={
-            "width": 1440,
-            "height": 1200,
-        }
-    )
-
+    context = await browser.new_context(viewport={"width": 1440, "height": 1200})
     page = await context.new_page()
     page.set_default_timeout(PAGE_TIMEOUT_MS)
 
-    usable: List[Dict[str, Any]] = []
-    queued: List[str] = [canonical_url(url) for url in START_URLS]
-    visited = set()
+    usable = []
+    queued = [canonical_url(url) for url in START_URLS]
     queued_set = set(queued)
+    visited = set()
 
     try:
         await page.goto(START_URLS[0], wait_until="networkidle", timeout=PAGE_TIMEOUT_MS)
         await page.wait_for_timeout(1500)
         await select_clinical_level(page, clinical_level)
 
-        while (
-            queued
-            and len(visited) < MAX_DISCOVERY_URLS_PER_LEVEL
-            and len(usable) < MAX_PAGES_PER_LEVEL
-        ):
+        while queued and len(visited) < MAX_DISCOVERY_URLS_PER_LEVEL and len(usable) < MAX_PAGES_PER_LEVEL:
             url = queued.pop(0)
             queued_set.discard(url)
 
             if url in visited:
                 continue
-
             visited.add(url)
 
             try:
                 log(f"[{clinical_level}] Opening: {url}")
-
                 title, text, links = await extract_page_text_and_links(page, url)
                 source_type = infer_source_type(url, title)
-
-                log(
-                    f"[{clinical_level}] Extracted {len(text)} characters from "
-                    f"{url} [{source_type}]"
-                )
+                log(f"[{clinical_level}] Extracted {len(text)} characters from {url} [{source_type}]")
 
                 if is_candidate_detail_url(url) and len(text) >= MIN_TEXT_CHARS:
                     key = source_key(clinical_level, url)
-
                     if not any(item["key"] == key for item in usable):
                         usable.append(
                             {
@@ -420,20 +337,14 @@ async def crawl_level(browser, clinical_level: str) -> List[Dict[str, Any]]:
                 for link in links:
                     if not link.startswith(BASE_URL):
                         continue
-
                     if link in visited or link in queued_set:
                         continue
-
-                    if any(
-                        tab in link
-                        for tab in ["/tabs/home", "/tabs/medicines", "/tabs/calculators"]
-                    ):
+                    if any(part in link for part in ["/tabs/home", "/tabs/medicines", "/tabs/calculators"]):
                         queued.append(link)
                         queued_set.add(link)
 
             except PlaywrightTimeoutError as exc:
                 log(f"[{clinical_level}] Timeout opening {url}: {exc}")
-
             except Exception as exc:
                 log(f"[{clinical_level}] Error opening {url}: {exc}")
 
@@ -454,24 +365,19 @@ def extract_json_array(text: str) -> Optional[List[Any]]:
 
     try:
         data = json.loads(cleaned)
-
         if isinstance(data, list):
             return data
-
         if isinstance(data, dict):
             for key in ["questions", "items", "data"]:
                 if isinstance(data.get(key), list):
                     return data[key]
-
     except Exception:
         pass
 
     start = cleaned.find("[")
     end = cleaned.rfind("]")
-
     if start != -1 and end != -1 and end > start:
-        fragment = cleaned[start:end + 1]
-
+        fragment = cleaned[start : end + 1]
         try:
             data = json.loads(fragment)
             if isinstance(data, list):
@@ -488,11 +394,7 @@ def gemini_payload(prompt: str) -> Dict[str, Any]:
         "contents": [
             {
                 "role": "user",
-                "parts": [
-                    {
-                        "text": prompt,
-                    }
-                ],
+                "parts": [{"text": prompt}],
             }
         ],
         "generationConfig": {
@@ -507,20 +409,18 @@ def gemini_payload(prompt: str) -> Dict[str, Any]:
 
 def build_batch_prompt(pages: List[Dict[str, Any]]) -> str:
     page_blocks = []
-
-    for idx, page in enumerate(pages, start=1):
-        clipped = page["text"][:12000]
-
+    for index, page in enumerate(pages, start=1):
+        clipped_text = page["text"][:12000]
         page_blocks.append(
             "\n".join(
                 [
-                    f"PAGE {idx}",
+                    f"PAGE {index}",
                     f"clinicalLevel: {page['clinicalLevel']}",
                     f"sourceUrl: {page['sourceUrl']}",
                     f"sourceTitle: {page['sourceTitle']}",
                     f"sourceType: {page['sourceType']}",
                     "content:",
-                    clipped,
+                    clipped_text,
                 ]
             )
         )
@@ -559,107 +459,74 @@ PAGES:
 """.strip()
 
 
-def call_gemini(prompt: str, clinical_level: str) -> Optional[List[Dict[str, Any]]]:
+def call_gemini(prompt: str, clinical_label: str) -> Optional[List[Dict[str, Any]]]:
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
-
     if not api_key:
         log("Warning: GEMINI_API_KEY is not set. Skipping generation.")
         return None
 
     for attempt in range(1, GEMINI_MAX_RETRIES + 1):
         for model in GEMINI_MODELS:
-            url = (
-                "https://generativelanguage.googleapis.com/v1beta/models/"
-                f"{model}:generateContent?key={api_key}"
-            )
-
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
             try:
-                log(f"[{clinical_level}] Trying Gemini model {model} attempt {attempt}")
-
-                response = requests.post(
-                    url,
-                    json=gemini_payload(prompt),
-                    timeout=REQUEST_TIMEOUT_SECONDS,
-                )
+                log(f"[{clinical_label}] Trying Gemini model {model} attempt {attempt}")
+                response = requests.post(url, json=gemini_payload(prompt), timeout=REQUEST_TIMEOUT_SECONDS)
 
                 if response.status_code == 429:
                     retry_after = response.headers.get("Retry-After")
-
-                    wait = (
-                        int(retry_after)
-                        if retry_after and retry_after.isdigit()
-                        else min(300, 30 * attempt + random.randint(5, 25))
-                    )
-
-                    log(
-                        f"[{clinical_level}] Gemini rate limit on {model}. "
-                        f"Waiting {wait} seconds."
-                    )
-
-                    time.sleep(wait)
+                    if retry_after and retry_after.isdigit():
+                        wait_seconds = int(retry_after)
+                    else:
+                        wait_seconds = min(300, 30 * attempt + random.randint(10, 30))
+                    log(f"[{clinical_label}] Gemini rate limit on {model}. Waiting {wait_seconds} seconds.")
+                    time.sleep(wait_seconds)
                     continue
 
                 if response.status_code == 404:
-                    log(f"[{clinical_level}] Model {model} not available. Skipping that model.")
+                    log(f"[{clinical_label}] Model {model} not available. Skipping that model.")
                     continue
 
                 response.raise_for_status()
                 data = response.json()
-
                 candidates = data.get("candidates", [])
-
                 if not candidates:
-                    log(f"[{clinical_level}] Gemini returned no candidates for {model}.")
+                    log(f"[{clinical_label}] Gemini returned no candidates for {model}.")
                     continue
 
                 parts = candidates[0].get("content", {}).get("parts", [])
-                text = "\n".join(
-                    part.get("text", "")
-                    for part in parts
-                    if isinstance(part, dict)
-                )
-
+                text = "\n".join(part.get("text", "") for part in parts if isinstance(part, dict))
                 parsed = extract_json_array(text)
-
                 if parsed is None:
-                    log(f"[{clinical_level}] Could not parse JSON from {model}.")
+                    log(f"[{clinical_label}] Could not parse JSON from {model}.")
                     continue
 
-                log(f"[{clinical_level}] Model {model} produced {len(parsed)} raw questions.")
-
-                return [q for q in parsed if isinstance(q, dict)]
+                log(f"[{clinical_label}] Model {model} produced {len(parsed)} raw questions.")
+                return [item for item in parsed if isinstance(item, dict)]
 
             except requests.RequestException as exc:
-                log(f"[{clinical_level}] Model {model} failed: {exc}")
-
+                log(f"[{clinical_label}] Model {model} failed: {exc}")
             except Exception as exc:
-                log(f"[{clinical_level}] Unexpected Gemini error for {model}: {exc}")
+                log(f"[{clinical_label}] Unexpected Gemini error for {model}: {exc}")
 
         if attempt < GEMINI_MAX_RETRIES:
-            sleep_for = min(300, 45 * attempt + random.randint(10, 30))
-            log(f"[{clinical_level}] Waiting {sleep_for} seconds before Gemini retry.")
-            time.sleep(sleep_for)
+            wait_seconds = min(300, 45 * attempt + random.randint(10, 30))
+            log(f"[{clinical_label}] Waiting {wait_seconds} seconds before Gemini retry.")
+            time.sleep(wait_seconds)
 
-    log(f"[{clinical_level}] All Gemini attempts failed for this batch. Continuing without failing workflow.")
+    log(f"[{clinical_label}] All Gemini attempts failed for this batch. Continuing without failing workflow.")
     return None
 
 
-def validate_question(
-    raw: Dict[str, Any],
-    page_lookup: Dict[str, Dict[str, Any]],
-) -> Optional[Dict[str, Any]]:
+def validate_question(raw: Dict[str, Any], page_lookup: Dict[str, Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     source_url = canonical_url(str(raw.get("sourceUrl", "")))
     clinical_level = clean_generation_text(str(raw.get("clinicalLevel", "")))
     key = source_key(clinical_level, source_url)
 
     page = page_lookup.get(key)
-
     if page is None:
         for candidate in page_lookup.values():
             if canonical_url(candidate["sourceUrl"]) == source_url:
                 page = candidate
-                clinical_level = candidate["clinicalLevel"]
-                key = candidate["key"]
                 break
 
     if page is None:
@@ -667,18 +534,11 @@ def validate_question(
 
     question = clean_generation_text(str(raw.get("question", "")))
     options_raw = raw.get("options", [])
-
     if not isinstance(options_raw, list):
         return None
 
-    options = [
-        clean_generation_text(str(opt))
-        for opt in options_raw
-        if str(opt).strip()
-    ]
-
+    options = [clean_generation_text(str(option)) for option in options_raw if str(option).strip()]
     options = options[:4]
-
     correct = clean_generation_text(str(raw.get("correctAnswer", "")))
     explanation = clean_generation_text(str(raw.get("explanation", "")))
 
@@ -686,8 +546,8 @@ def validate_question(
         return None
 
     if correct not in options:
-        lowered = {opt.lower(): opt for opt in options}
-        correct = lowered.get(correct.lower(), correct)
+        lower_options = {option.lower(): option for option in options}
+        correct = lower_options.get(correct.lower(), correct)
 
     if correct not in options:
         return None
@@ -714,47 +574,35 @@ def question_identity(question: Dict[str, Any]) -> str:
     )
 
 
-def group_existing_questions(
-    questions: List[Dict[str, Any]],
-) -> Dict[str, List[Dict[str, Any]]]:
-    grouped: Dict[str, List[Dict[str, Any]]] = {}
-
-    for q in questions:
-        if not isinstance(q, dict):
+def group_existing_questions(questions: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+    grouped = {}
+    for question in questions:
+        if not isinstance(question, dict):
             continue
 
-        clinical_level = clean_generation_text(str(q.get("clinicalLevel", "")))
-        url = canonical_url(str(q.get("sourceUrl", "")))
-
+        clinical_level = clean_generation_text(str(question.get("clinicalLevel", "")))
+        url = canonical_url(str(question.get("sourceUrl", "")))
         if not clinical_level or not url:
             continue
 
-        q["clinicalLevel"] = clinical_level
-        q["sourceUrl"] = url
+        question["clinicalLevel"] = clinical_level
+        question["sourceUrl"] = url
 
-        for field in [
-            "question",
-            "correctAnswer",
-            "explanation",
-            "sourceTitle",
-            "sourceType",
-        ]:
-            if field in q:
-                q[field] = clean_generation_text(str(q[field]))
+        for field in ["question", "correctAnswer", "explanation", "sourceTitle", "sourceType"]:
+            if field in question:
+                question[field] = clean_generation_text(str(question[field]))
 
-        if isinstance(q.get("options"), list):
-            q["options"] = [
-                clean_generation_text(str(opt))
-                for opt in q["options"]
-            ]
+        if isinstance(question.get("options"), list):
+            question["options"] = [clean_generation_text(str(option)) for option in question["options"]]
 
         key = source_key(clinical_level, url)
-        grouped.setdefault(key, []).append(q)
+        grouped.setdefault(key, []).append(question)
 
     return grouped
 
 
-def get_old_hash(page_records: Dict[str, Any], key: str) -> Optionalold_record = page_records.get(key)
+def get_old_hash(page_records, key):
+    old_record = page_records.get(key)
 
     if isinstance(old_record, dict):
         value = old_record.get("hash")
@@ -768,11 +616,9 @@ def get_old_hash(page_records: Dict[str, Any], key: str) -> Optionalold_record =
 
 async def main() -> None:
     started = time.time()
-
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     existing_questions_raw = load_json(QUESTIONS_FILE, [])
-
     if not isinstance(existing_questions_raw, list):
         log("Warning: existing questions.json is not a list. Starting with an empty list.")
         existing_questions_raw = []
@@ -780,17 +626,14 @@ async def main() -> None:
     existing_by_page = group_existing_questions(existing_questions_raw)
 
     page_records = load_json(PAGE_RECORDS_FILE, {})
-
     if not isinstance(page_records, dict):
         page_records = {}
 
     log("Starting incremental all-clinical-level crawl.")
+    all_pages = []
 
-    all_pages: List[Dict[str, Any]] = []
-
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(headless=True)
         try:
             for clinical_level in CLINICAL_LEVELS:
                 log(f"Starting crawl for clinical level: {clinical_level}")
@@ -799,24 +642,14 @@ async def main() -> None:
         finally:
             await browser.close()
 
-    page_lookup = {
-        page["key"]: page
-        for page in all_pages
-    }
+    page_lookup = {page["key"]: page for page in all_pages}
 
     save_json(
         CRAWL_FILE,
-        [
-            {
-                k: v
-                for k, v in page.items()
-                if k != "text"
-            }
-            for page in all_pages
-        ],
+        [{key: value for key, value in page.items() if key != "text"} for page in all_pages],
     )
 
-    changed_pages: List[Dict[str, Any]] = []
+    changed_pages = []
     unchanged_keys = set()
 
     for page in all_pages:
@@ -832,109 +665,72 @@ async def main() -> None:
     log(f"Changed or missing-question pages requiring generation: {len(changed_pages)}")
     log(f"Unchanged pages retaining existing questions: {len(unchanged_keys)}")
 
-    final_questions: List[Dict[str, Any]] = []
-
+    final_questions = []
     for key in sorted(unchanged_keys):
         final_questions.extend(existing_by_page.get(key, []))
 
-    generated_by_page: Dict[str, List[Dict[str, Any]]] = {}
+    generated_by_page = {}
 
-    if changed_pages:
-        for i in range(0, len(changed_pages), BATCH_SIZE):
-            batch = changed_pages[i:i + BATCH_SIZE]
+    for start in range(0, len(changed_pages), GEMINI_BATCH_SIZE):
+        batch = changed_pages[start : start + GEMINI_BATCH_SIZE]
+        clinical_label = ", ".join(sorted({page["clinicalLevel"] for page in batch}))
+        prompt = build_batch_prompt(batch)
+        raw_questions = call_gemini(prompt, clinical_label)
 
-            clinical_label = ", ".join(
-                sorted(
-                    {
-                        p["clinicalLevel"]
-                        for p in batch
-                    }
-                )
-            )
+        if raw_questions is None:
+            for page in batch:
+                fallback = existing_by_page.get(page["key"], [])
+                if fallback:
+                    log(f"[{page['clinicalLevel']}] Keeping existing questions for {page['sourceUrl']} after generation failure.")
+                    generated_by_page.setdefault(page["key"], []).extend(fallback)
+                else:
+                    log(f"[{page['clinicalLevel']}] No questions generated for {page['sourceUrl']} due to Gemini failure.")
+            continue
 
-            prompt = build_batch_prompt(batch)
-            raw_questions = call_gemini(prompt, clinical_label)
-
-            if raw_questions is None:
-                for page in batch:
-                    fallback = existing_by_page.get(page["key"], [])
-
-                    if fallback:
-                        log(
-                            f"[{page['clinicalLevel']}] Keeping existing questions for "
-                            f"{page['sourceUrl']} after generation failure."
-                        )
-
-                        generated_by_page.setdefault(page["key"], []).extend(fallback)
-
-                    else:
-                        log(
-                            f"[{page['clinicalLevel']}] No questions generated for "
-                            f"{page['sourceUrl']} due to Gemini failure."
-                        )
-
+        valid_count = 0
+        for raw in raw_questions:
+            question = validate_question(raw, page_lookup)
+            if question is None:
                 continue
+            key = source_key(question["clinicalLevel"], question["sourceUrl"])
+            generated_by_page.setdefault(key, []).append(question)
+            valid_count += 1
 
-            valid_count = 0
+        log(f"{clinical_label}: accepted {valid_count} valid questions from batch.")
 
-            for raw in raw_questions:
-                q = validate_question(raw, page_lookup)
-
-                if q is None:
-                    continue
-
-                generated_by_page.setdefault(
-                    source_key(q["clinicalLevel"], q["sourceUrl"]),
-                    [],
-                ).append(q)
-
-                valid_count += 1
-
-            log(f"{clinical_label}: accepted {valid_count} valid questions from batch.")
-
-            if GEMINI_DELAY_SECONDS > 0 and i + BATCH_SIZE < len(changed_pages):
-                log(f"Waiting {GEMINI_DELAY_SECONDS} seconds before next Gemini batch.")
-                time.sleep(GEMINI_DELAY_SECONDS)
+        if GEMINI_DELAY_SECONDS > 0 and start + GEMINI_BATCH_SIZE < len(changed_pages):
+            log(f"Waiting {GEMINI_DELAY_SECONDS} seconds before next Gemini batch.")
+            time.sleep(GEMINI_DELAY_SECONDS)
 
     for page in changed_pages:
-        key = page["key"]
-        new_questions = generated_by_page.get(key, [])
-
+        new_questions = generated_by_page.get(page["key"], [])
         if new_questions:
             final_questions.extend(new_questions)
         else:
-            final_questions.extend(existing_by_page.get(key, []))
+            final_questions.extend(existing_by_page.get(page["key"], []))
 
-    deduped: List[Dict[str, Any]] = []
+    deduped = []
     seen_questions = set()
-
-    for q in final_questions:
-        ident = question_identity(q)
-
-        if ident in seen_questions:
+    for question in final_questions:
+        identity = question_identity(question)
+        if identity in seen_questions:
             continue
+        seen_questions.add(identity)
+        deduped.append(question)
 
-        seen_questions.add(ident)
-        deduped.append(q)
-
-    level_order = {
-        level: i
-        for i, level in enumerate(CLINICAL_LEVELS)
-    }
-
+    level_order = {level: index for index, level in enumerate(CLINICAL_LEVELS)}
     deduped.sort(
-        key=lambda q: (
-            level_order.get(q.get("clinicalLevel", ""), 999),
-            str(q.get("sourceType", "")),
-            str(q.get("sourceTitle", "")),
-            str(q.get("question", "")),
+        key=lambda question: (
+            level_order.get(question.get("clinicalLevel", ""), 999),
+            str(question.get("sourceType", "")),
+            str(question.get("sourceTitle", "")),
+            str(question.get("question", "")),
         )
     )
 
-    new_records: Dict[str, Any] = {}
-
+    new_page_records = {}
     for page in all_pages:
-        new_records[page["key"]] = {
+        new_page_records[page["key"]] = {
             "hash": page["hash"],
             "clinicalLevel": page["clinicalLevel"],
             "sourceUrl": page["sourceUrl"],
@@ -944,19 +740,14 @@ async def main() -> None:
         }
 
     save_json(QUESTIONS_FILE, deduped)
-    save_json(PAGE_RECORDS_FILE, new_records)
+    save_json(PAGE_RECORDS_FILE, new_page_records)
 
-    by_level: Dict[str, int] = {
-        level: 0
-        for level in CLINICAL_LEVELS
-    }
-
-    for q in deduped:
-        level = q.get("clinicalLevel", "")
+    by_level = {level: 0 for level in CLINICAL_LEVELS}
+    for question in deduped:
+        level = question.get("clinicalLevel", "")
         by_level[level] = by_level.get(level, 0) + 1
 
     log("Question counts by clinical level:")
-
     for level in CLINICAL_LEVELS:
         log(f"- {level}: {by_level.get(level, 0)}")
 
@@ -967,7 +758,6 @@ async def main() -> None:
 if __name__ == "__main__":
     try:
         asyncio.run(main())
-
     except KeyboardInterrupt:
         log("Cancelled by user.")
         sys.exit(130)
