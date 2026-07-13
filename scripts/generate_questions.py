@@ -1,33 +1,25 @@
-import os
-import json
-import re
-import time
 import asyncio
 import hashlib
+import json
+import os
+import random
+import re
+import sys
+import time
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import urldefrag, urljoin, urlparse, urlunparse, parse_qsl, urlencode
+
 import requests
-
-from urllib.parse import urljoin, urlparse
-from datetime import datetime, timezone
-from playwright.async_api import async_playwright
+from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
 
 
-DOMAIN = "clinical.saambulance.sa.gov.au"
-
-ROOT_URL = "https://clinical.saambulance.sa.gov.au"
-HOME_URL = "https://clinical.saambulance.sa.gov.au/tabs/home"
-MEDICINES_URL = "https://clinical.saambulance.sa.gov.au/tabs/medicines"
-CALCULATORS_URL = "https://clinical.saambulance.sa.gov.au/tabs/calculators"
+BASE_URL = "https://clinical.saambulance.sa.gov.au"
 
 START_URLS = [
-    HOME_URL,
-    MEDICINES_URL,
-    CALCULATORS_URL
-]
-
-EXCLUDED_URL_PREFIXES = [
-    "https://clinical.saambulance.sa.gov.au/tabs/checklists",
-    "https://clinical.saambulance.sa.gov.au/tabs/checklists/cppro-s",
-    "https://clinical.saambulance.sa.gov.au/tabs/tools"
+    f"{BASE_URL}/tabs/home",
+    f"{BASE_URL}/tabs/medicines",
+    f"{BASE_URL}/tabs/calculators",
 ]
 
 CLINICAL_LEVELS = [
@@ -37,1373 +29,945 @@ CLINICAL_LEVELS = [
     "Ambulance Officer Extended Scope",
     "Paramedic",
     "Intensive Care Paramedic",
-    "Extended Care Paramedic"
+    "Extended Care Paramedic",
 ]
 
-MAX_VISITED_URLS_PER_LEVEL = 60
-MAX_CONTENT_PAGES_PER_LEVEL = 10
-STOP_IF_NO_NEW_CONTENT_FOR = 18
-QUESTIONS_PER_PAGE = 2
+DATA_DIR = Path("data")
+QUESTIONS_FILE = DATA_DIR / "questions.json"
+PAGE_RECORDS_FILE = DATA_DIR / "page_records.json"
+CRAWL_FILE = DATA_DIR / "crawled_pages.json"
+
+MAX_PAGES_PER_LEVEL = int(os.getenv("MAX_PAGES_PER_LEVEL", "10"))
+MIN_TEXT_CHARS = int(os.getenv("MIN_TEXT_CHARS", "500"))
+QUESTIONS_PER_PAGE = int(os.getenv("QUESTIONS_PER_PAGE", "2"))
+BATCH_SIZE = int(os.getenv("GEMINI_BATCH_SIZE", "3"))
+GEMINI_DELAY_SECONDS = float(os.getenv("GEMINI_DELAY_SECONDS", "20"))
+GEMINI_MAX_RETRIES = int(os.getenv("GEMINI_MAX_RETRIES", "3"))
+REQUEST_TIMEOUT_SECONDS = int(os.getenv("REQUEST_TIMEOUT_SECONDS", "90"))
+PAGE_TIMEOUT_MS = int(os.getenv("PAGE_TIMEOUT_MS", "60000"))
+MAX_DISCOVERY_URLS_PER_LEVEL = int(os.getenv("MAX_DISCOVERY_URLS_PER_LEVEL", "250"))
 
 GEMINI_MODELS = [
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash"
+    m.strip()
+    for m in os.getenv(
+        "GEMINI_MODELS",
+        "gemini-2.5-flash,gemini-2.0-flash"
+    ).split(",")
+    if m.strip()
 ]
 
-DATA_DIR = "data"
 
-QUESTIONS_PATH = os.path.join(DATA_DIR, "questions.json")
-QUESTIONS_BY_SOURCE_PATH = os.path.join(DATA_DIR, "questions_by_source.json")
-PAGE_HASHES_PATH = os.path.join(DATA_DIR, "page_hashes.json")
-METADATA_PATH = os.path.join(DATA_DIR, "metadata.json")
-CRAWL_LOG_PATH = os.path.join(DATA_DIR, "crawl_log.json")
-CLICK_LOG_PATH = os.path.join(DATA_DIR, "click_log.json")
-SOURCE_PAGES_PATH = os.path.join(DATA_DIR, "source_pages.json")
-GEMINI_DEBUG_PATH = os.path.join(DATA_DIR, "gemini_debug.json")
-
-api_key = os.environ.get("GEMINI_API_KEY")
-
-if not api_key:
-    raise RuntimeError("GEMINI_API_KEY is missing.")
-
-os.makedirs(DATA_DIR, exist_ok=True)
+def log(message: str) -> None:
+    print(message, flush=True)
 
 
-def load_json(path, default):
-    if not os.path.exists(path):
+def load_json(path: Path, default: Any) -> Any:
+    if not path.exists():
         return default
 
     try:
-        with open(path, "r", encoding="utf-8") as file:
-            return json.load(file)
-    except Exception:
+        with path.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as exc:
+        log(f"Warning: could not read {path}: {exc}")
         return default
 
 
-def save_json(path, data):
-    with open(path, "w", encoding="utf-8") as file:
-        json.dump(data, file, ensure_ascii=False, indent=2)
+def save_json(path: Path, data: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with tmp.open("w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+        f.write("\n")
+
+    tmp.replace(path)
 
 
-def clean_url(url):
+def normalise_space(text: str) -> str:
+    return re.sub(r"\s+", " ", text or "").strip()
+
+
+def clean_text(text: str) -> str:
+    text = text or ""
+    text = text.replace("\u00a0", " ")
+    text = re.sub(r"\s+", " ", text)
+
+    noise = [
+        "Clinical Practice Guidelines",
+        "SA Ambulance Service",
+        "Skip to content",
+        "Open menu",
+        "Close menu",
+    ]
+
+    for item in noise:
+        text = text.replace(item, " ")
+
+    return normalise_space(text)
+
+
+def clean_generation_text(text: str) -> str:
+    text = text or ""
+
+    replacements = {
+        "Ambulance Assist (AA)": "Ambulance Assist",
+        "Ambulance Responder (AR)": "Ambulance Responder",
+        "Ambulance Officer (AO)": "Ambulance Officer",
+        "Ambulance Officer Extended Scope (AOES)": "Ambulance Officer Extended Scope",
+        "Paramedic (P)": "Paramedic",
+        "Paramedic(P)": "Paramedic",
+        "Intensive Care Paramedic (ICP)": "Intensive Care Paramedic",
+        "Intensive Care Paramedic(ICP)": "Intensive Care Paramedic",
+        "Extended Care Paramedic (ECP)": "Extended Care Paramedic",
+        "Extended Care Paramedic(ECP)": "Extended Care Paramedic",
+    }
+
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+
+    text = re.sub(
+        r"\bParamedic\s*\(\s*Para\s*\)",
+        "Paramedic",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    text = re.sub(
+        r"\b([A-Za-z ]+)\s*\(\s*(AA|AR|AO|AOES|P|ICP|ECP)\s*\)",
+        r"\1",
+        text,
+    )
+
+    return normalise_space(text)
+
+
+def canonical_url(url: str) -> str:
     if not url:
         return ""
 
-    return str(url).split("#")[0].rstrip("/")
+    url, _fragment = urldefrag(url)
+    url = url.replace("&amp;", "&")
+
+    parsed = urlparse(url)
+
+    scheme = parsed.scheme or "https"
+    netloc = parsed.netloc or urlparse(BASE_URL).netloc
+    path = re.sub(r"/+$", "", parsed.path or "/")
+
+    query_pairs = []
+    for key, value in parse_qsl(parsed.query, keep_blank_values=True):
+        if key.lower() in {"title", "ref"}:
+            continue
+        query_pairs.append((key, value))
+
+    query = urlencode(query_pairs, doseq=True)
+
+    return urlunparse((scheme, netloc, path, "", query, ""))
 
 
-def is_internal(url):
-    parsed = urlparse(clean_url(url))
-    return parsed.netloc == DOMAIN
+def source_key(clinical_level: str, url: str) -> str:
+    return f"{clinical_level}|{canonical_url(url)}"
 
 
-def is_excluded_url(url):
-    cleaned = clean_url(url)
-
-    for prefix in EXCLUDED_URL_PREFIXES:
-        if cleaned.startswith(prefix):
-            return True
-
-    return False
+def page_hash(text: str) -> str:
+    return hashlib.sha256(clean_text(text).encode("utf-8")).hexdigest()
 
 
-def is_allowed_site_area(url):
-    cleaned = clean_url(url)
+def infer_source_type(url: str, title: str) -> str:
+    lower = f"{url} {title}".lower()
 
-    if not is_internal(cleaned):
-        return False
-
-    if is_excluded_url(cleaned):
-        return False
-
-    allowed_prefixes = [
-        HOME_URL,
-        MEDICINES_URL,
-        CALCULATORS_URL
-    ]
-
-    for prefix in allowed_prefixes:
-        if cleaned.startswith(prefix):
-            return True
-
-    return False
-
-
-def useful_url(url):
-    cleaned = clean_url(url)
-
-    if not cleaned:
-        return False
-
-    if not is_internal(cleaned):
-        return False
-
-    if is_excluded_url(cleaned):
-        return False
-
-    if not is_allowed_site_area(cleaned):
-        return False
-
-    bad_parts = [
-        "/tabs/checklists",
-        "/cppro",
-        "/favourites",
-        "/favorites",
-        "/recent"
-    ]
-
-    for part in bad_parts:
-        if part in cleaned.lower():
-            return False
-
-    return True
-
-
-def categorise_url(url):
-    cleaned = clean_url(url)
-
-    if cleaned.startswith(MEDICINES_URL):
+    if "/medicines" in lower:
         return "Medicine"
 
-    if cleaned.startswith(CALCULATORS_URL):
+    if "/calculators" in lower or "calculator" in lower:
         return "Calculator"
 
-    if cleaned.startswith(HOME_URL):
-        return "Clinical Practice Guideline"
-
-    return "Other"
+    return "Clinical Practice Guideline"
 
 
-def is_detail_content_page(url):
-    cleaned = clean_url(url)
+def title_from_url(url: str) -> str:
+    path = urlparse(url).path.rstrip("/")
+    slug = path.split("/")[-1] if path else "Guideline"
+    slug = re.sub(r"-[a-z]{1,5}$", "", slug, flags=re.IGNORECASE)
 
-    if not is_allowed_site_area(cleaned):
+    return " ".join(
+        word.capitalize()
+        for word in slug.replace("-", " ").split()
+    ) or "Guideline"
+
+
+def is_same_site_url(url: str) -> bool:
+    try:
+        parsed = urlparse(url)
+        return parsed.netloc in {"", "clinical.saambulance.sa.gov.au"}
+    except Exception:
         return False
 
-    if cleaned in [ROOT_URL, HOME_URL, MEDICINES_URL, CALCULATORS_URL]:
-        return False
 
-    if cleaned.startswith(HOME_URL) and "/page/" in cleaned:
-        return True
+def is_candidate_detail_url(url: str) -> bool:
+    url_l = url.lower()
 
-    if cleaned.startswith(MEDICINES_URL + "/"):
-        return True
-
-    if cleaned.startswith(CALCULATORS_URL + "/"):
-        return True
-
-    return False
-
-
-def looks_like_disclaimer_text(text):
-    lowered = str(text).lower()
-
-    disclaimer_terms = [
-        "not intended to serve as health",
-        "medical or treatment advice",
-        "information purposes only",
-        "saas does not represent or warrant",
-        "to the maximum extent permitted by law",
-        "liability in negligence",
-        "external websites",
-        "does not endorse any external website"
-    ]
-
-    count = 0
-
-    for term in disclaimer_terms:
-        if term in lowered:
-            count = count + 1
-
-    return count >= 2
-
-
-def looks_like_real_content(text):
-    lowered = str(text).lower()
-
-    content_terms = [
-        "principle",
-        "principles",
-        "guideline",
-        "indications",
-        "contraindications",
-        "management",
-        "assessment",
-        "treatment",
-        "dose",
-        "dosing",
-        "administration",
-        "precautions",
-        "clinical",
-        "medicine",
-        "calculator",
-        "calculation",
-        "considerations"
-    ]
-
-    for term in content_terms:
-        if term in lowered:
-            return True
-
-    return False
-
-
-def normalise_text_for_hash(text):
-    normalised = str(text).lower()
-    normalised = re.sub(r"\s+", " ", normalised)
-    normalised = normalised.strip()
-    return normalised
-
-
-def calculate_hash(text):
-    normalised = normalise_text_for_hash(text)
-    return hashlib.sha256(normalised.encode("utf-8")).hexdigest()
-
-
-def make_source_key(clinical_level, url):
-    return str(clinical_level) + "|" + clean_url(url)
-
-
-def strip_superfluous_question_prefix(question):
-    text = str(question).strip()
-
-    patterns = [
-        r"^according to the sa ambulance service guidelines?,?\s+",
-        r"^according to sa ambulance service guidelines?,?\s+",
-        r"^according to the saas guidelines?,?\s+",
-        r"^according to saas guidelines?,?\s+",
-        r"^according to the guideline,?\s+",
-        r"^according to the source text,?\s+",
-        r"^based on the source text,?\s+",
-        r"^based on the guideline,?\s+",
-        r"^in the sa ambulance service guideline,?\s+",
-        r"^in the saas guideline,?\s+"
-    ]
-
-    for pattern in patterns:
-        text = re.sub(pattern, "", text, flags=re.IGNORECASE).strip()
-
-    if text:
-        text = text[0].upper() + text[1:]
-
-    return text
-
-
-def clean_generated_text(text):
-    if text is None:
-        return ""
-
-    cleaned = str(text).strip()
-
-    replacements = [
-        (r"Paramedic\s{0,}\(\s{0,}Para\s{0,}\)", "Paramedic"),
-        (r"Intensive Care Paramedic\s{0,}\(\s{0,}ICP\s{0,}\)", "Intensive Care Paramedic"),
-        (r"Extended Care Paramedic\s{0,}\(\s{0,}ECP\s{0,}\)", "Extended Care Paramedic"),
-        (r"Ambulance Officer Extended Scope\s{0,}\(\s{0,}AOES\s{0,}\)", "Ambulance Officer Extended Scope"),
-        (r"Ambulance Officer\s{0,}\(\s{0,}AO\s{0,}\)", "Ambulance Officer"),
-        (r"Ambulance Responder\s{0,}\(\s{0,}AR\s{0,}\)", "Ambulance Responder"),
-        (r"Ambulance Assist\s{0,}\(\s{0,}AA\s{0,}\)", "Ambulance Assist"),
-        (r"\(\s{0,}Para\s{0,}\)", ""),
-        (r"\(\s{0,}ICP\s{0,}\)", ""),
-        (r"\(\s{0,}ECP\s{0,}\)", ""),
-        (r"\(\s{0,}AOES\s{0,}\)", ""),
-        (r"\(\s{0,}AO\s{0,}\)", ""),
-        (r"\(\s{0,}AR\s{0,}\)", ""),
-        (r"\(\s{0,}AA\s{0,}\)", "")
-    ]
-
-    for pattern, replacement in replacements:
-        cleaned = re.sub(pattern, replacement, cleaned, flags=re.IGNORECASE)
-
-    cleaned = re.sub(r"\s+", " ", cleaned)
-    cleaned = re.sub(r"\s+([,.;:?])", r"\1", cleaned)
-    cleaned = cleaned.strip()
-
-    return cleaned
-
-
-def clean_question_record(question_record):
-    if not isinstance(question_record, dict):
-        return question_record
-
-    cleaned_record = dict(question_record)
-
-    if "question" in cleaned_record:
-        cleaned_record["question"] = clean_generated_text(cleaned_record.get("question", ""))
-
-    if "explanation" in cleaned_record:
-        cleaned_record["explanation"] = clean_generated_text(cleaned_record.get("explanation", ""))
-
-    if "correctAnswer" in cleaned_record:
-        cleaned_record["correctAnswer"] = clean_generated_text(cleaned_record.get("correctAnswer", ""))
-
-    if "answer" in cleaned_record:
-        cleaned_record["answer"] = clean_generated_text(cleaned_record.get("answer", ""))
-
-    if isinstance(cleaned_record.get("options"), list):
-        cleaned_options = []
-
-        for option in cleaned_record["options"]:
-            cleaned_options.append(clean_generated_text(option))
-
-        cleaned_record["options"] = cleaned_options
-
-    return cleaned_record
-
-
-def extract_urls_from_text_and_html(text, html, base_url):
-    found = set()
-    combined = str(text) + "\n" + str(html)
-
-    absolute_matches = re.findall(
-        r"https://clinical\.saambulance\.sa\.gov\.au/[A-Za-z0-9_\-\/\.\?\=\&%]+",
-        combined
+    return "/page/" in url_l and any(
+        tab in url_l
+        for tab in ["/tabs/home", "/tabs/medicines", "/tabs/calculators"]
     )
 
-    relative_matches = re.findall(
-        r"/tabs/[A-Za-z0-9_\-\/\.\?\=\&%]+",
-        combined
-    )
 
-    for match in absolute_matches:
-        url = clean_url(match)
+async def select_clinical_level(page, clinical_level: str) -> bool:
+    log(f"Trying to select level: {clinical_level}")
 
-        if useful_url(url):
-            found.add(url)
+    selectors = [
+        "button",
+        "[role=button]",
+        "mat-select",
+        "select",
+        ".mat-mdc-select",
+        ".mat-select",
+    ]
 
-    for match in relative_matches:
-        url = clean_url(urljoin(base_url, match))
-
-        if useful_url(url):
-            found.add(url)
-
-    return found
-
-
-async def click_text_if_present(page, texts):
-    for text in texts:
-        try:
-            locator = page.get_by_text(text, exact=True)
-
-            if await locator.count() > 0:
-                await locator.first.click(timeout=5000)
-                await page.wait_for_timeout(2500)
+    try:
+        exact = page.get_by_text(clinical_level, exact=True)
+        if await exact.count() > 0:
+            try:
+                await exact.first().click(timeout=5000)
+                await page.wait_for_timeout(1000)
+                log(f"Selected level by exact text: {clinical_level}")
                 return True
+            except Exception:
+                pass
+    except Exception:
+        pass
 
+    for selector in selectors:
+        try:
+            elements = page.locator(selector)
+            count = await elements.count()
+
+            for i in range(min(count, 20)):
+                element = elements.nth(i)
+
+                try:
+                    text = normalise_space(await element.inner_text(timeout=1000))
+                except Exception:
+                    text = ""
+
+                if (
+                    clinical_level.lower() in text.lower()
+                    or "clinical" in text.lower()
+                    or "level" in text.lower()
+                ):
+                    try:
+                        await element.click(timeout=3000)
+                        await page.wait_for_timeout(500)
+
+                        option = page.get_by_text(clinical_level, exact=True)
+                        if await option.count() > 0:
+                            await option.first().click(timeout=5000)
+                            await page.wait_for_timeout(1000)
+                            log(f"Selected level using selector {selector}: {clinical_level}")
+                            return True
+                    except Exception:
+                        continue
         except Exception:
-            pass
+            continue
 
+    try:
+        await page.keyboard.press("Escape")
+    except Exception:
+        pass
+
+    log(f"Warning: could not confirm clinical level selection for: {clinical_level}")
     return False
 
 
-async def click_disclaimer_ok_if_present(page):
-    return await click_text_if_present(
-        page,
+async def extract_page_text_and_links(page, url: str) -> Tuple[str, str, List[str]]:
+    await page.goto(url, wait_until="networkidle", timeout=PAGE_TIMEOUT_MS)
+    await page.wait_for_timeout(1200)
+
+    title = ""
+
+    for selector in ["h1", "h2", "ion-title", ".title", "title"]:
+        try:
+            loc = page.locator(selector)
+            if await loc.count() > 0:
+                title = normalise_space(await loc.first().inner_text(timeout=2000))
+                if title:
+                    break
+        except Exception:
+            continue
+
+    if not title:
+        try:
+            title = normalise_space(await page.title())
+        except Exception:
+            title = title_from_url(url)
+
+    texts = []
+    selectors = ["main", "ion-content", "article", ".content", "body"]
+
+    for selector in selectors:
+        try:
+            loc = page.locator(selector)
+            if await loc.count() > 0:
+                candidate = clean_text(await loc.first().inner_text(timeout=5000))
+                if len(candidate) > len(" ".join(texts)):
+                    texts = [candidate]
+        except Exception:
+            continue
+
+    text = clean_text(" ".join(texts))
+
+    links: List[str] = []
+
+    try:
+        hrefs = await page.locator("a[href]").evaluate_all(
+            "els => els.map(a => a.href)"
+        )
+
+        for href in hrefs:
+            if href and is_same_site_url(href):
+                links.append(canonical_url(urljoin(BASE_URL, href)))
+    except Exception:
+        pass
+
+    try:
+        body_links = re.findall(
+            r"https://clinical\.saambulance\.sa\.gov\.au/[^\s\"'<>]+",
+            await page.content(),
+        )
+
+        for href in body_links:
+            if is_same_site_url(href):
+                links.append(canonical_url(href))
+    except Exception:
+        pass
+
+    seen = set()
+    unique_links = []
+
+    for link in links:
+        if link not in seen:
+            seen.add(link)
+            unique_links.append(link)
+
+    return title or title_from_url(url), text, unique_links
+
+
+async def crawl_level(browser, clinical_level: str) -> List[Dict[str, Any]]:
+    context = await browser.new_context(
+        viewport={
+            "width": 1440,
+            "height": 1200,
+        }
+    )
+
+    page = await context.new_page()
+    page.set_default_timeout(PAGE_TIMEOUT_MS)
+
+    usable: List[Dict[str, Any]] = []
+    queued: List[str] = [canonical_url(url) for url in START_URLS]
+    visited = set()
+    queued_set = set(queued)
+
+    try:
+        await page.goto(START_URLS[0], wait_until="networkidle", timeout=PAGE_TIMEOUT_MS)
+        await page.wait_for_timeout(1500)
+        await select_clinical_level(page, clinical_level)
+
+        while (
+            queued
+            and len(visited) < MAX_DISCOVERY_URLS_PER_LEVEL
+            and len(usable) < MAX_PAGES_PER_LEVEL
+        ):
+            url = queued.pop(0)
+            queued_set.discard(url)
+
+            if url in visited:
+                continue
+
+            visited.add(url)
+
+            try:
+                log(f"[{clinical_level}] Opening: {url}")
+
+                title, text, links = await extract_page_text_and_links(page, url)
+                source_type = infer_source_type(url, title)
+
+                log(
+                    f"[{clinical_level}] Extracted {len(text)} characters from "
+                    f"{url} [{source_type}]"
+                )
+
+                if is_candidate_detail_url(url) and len(text) >= MIN_TEXT_CHARS:
+                    key = source_key(clinical_level, url)
+
+                    if not any(item["key"] == key for item in usable):
+                        usable.append(
+                            {
+                                "key": key,
+                                "clinicalLevel": clinical_level,
+                                "sourceUrl": canonical_url(url),
+                                "sourceTitle": title or title_from_url(url),
+                                "sourceType": source_type,
+                                "text": text,
+                                "hash": page_hash(text),
+                            }
+                        )
+                else:
+                    log(f"[{clinical_level}] Discovery page only: {url}")
+
+                for link in links:
+                    if not link.startswith(BASE_URL):
+                        continue
+
+                    if link in visited or link in queued_set:
+                        continue
+
+                    if any(
+                        tab in link
+                        for tab in ["/tabs/home", "/tabs/medicines", "/tabs/calculators"]
+                    ):
+                        queued.append(link)
+                        queued_set.add(link)
+
+            except PlaywrightTimeoutError as exc:
+                log(f"[{clinical_level}] Timeout opening {url}: {exc}")
+
+            except Exception as exc:
+                log(f"[{clinical_level}] Error opening {url}: {exc}")
+
+    finally:
+        await context.close()
+
+    log(f"{clinical_level}: crawled {len(usable)} usable detail pages.")
+    return usable
+
+
+def extract_json_array(text: str) -> Optional[List[Any]]:
+    if not text:
+        return None
+
+    cleaned = text.strip()
+    cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s*```$", "", cleaned)
+
+    try:
+        data = json.loads(cleaned)
+
+        if isinstance(data, list):
+            return data
+
+        if isinstance(data, dict):
+            for key in ["questions", "items", "data"]:
+                if isinstance(data.get(key), list):
+                    return data[key]
+
+    except Exception:
+        pass
+
+    start = cleaned.find("[")
+    end = cleaned.rfind("]")
+
+    if start != -1 and end != -1 and end > start:
+        fragment = cleaned[start:end + 1]
+
+        try:
+            data = json.loads(fragment)
+            if isinstance(data, list):
+                return data
+        except Exception as exc:
+            log(f"JSON parse error: {exc}")
+            log(fragment[:1000])
+
+    return None
+
+
+def gemini_payload(prompt: str) -> Dict[str, Any]:
+    return {
+        "contents": [
+            {
+                "role": "user",
+                "parts": [
+                    {
+                        "text": prompt,
+                    }
+                ],
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.2,
+            "topP": 0.8,
+            "topK": 40,
+            "maxOutputTokens": 8192,
+            "responseMimeType": "application/json",
+        },
+    }
+
+
+def build_batch_prompt(pages: List[Dict[str, Any]]) -> str:
+    page_blocks = []
+
+    for idx, page in enumerate(pages, start=1):
+        clipped = page["text"][:12000]
+
+        page_blocks.append(
+            "\n".join(
+                [
+                    f"PAGE {idx}",
+                    f"clinicalLevel: {page['clinicalLevel']}",
+                    f"sourceUrl: {page['sourceUrl']}",
+                    f"sourceTitle: {page['sourceTitle']}",
+                    f"sourceType: {page['sourceType']}",
+                    "content:",
+                    clipped,
+                ]
+            )
+        )
+
+    return f"""
+You are generating revision quiz questions for South Australian ambulance clinical guideline study.
+
+Return ONLY valid JSON. Do not use markdown. Do not include commentary.
+
+Create exactly {QUESTIONS_PER_PAGE} questions for each PAGE below.
+
+Each JSON object must have these exact fields:
+- question: string
+- options: array of exactly 4 strings
+- correctAnswer: string, exactly matching one option
+- explanation: string
+- clinicalLevel: string, exactly copied from the PAGE clinicalLevel
+- sourceUrl: string, exactly copied from the PAGE sourceUrl
+- sourceTitle: string, exactly copied from the PAGE sourceTitle
+- sourceType: string, exactly copied from the PAGE sourceType
+
+Rules:
+- Questions must be answerable from the supplied page content only.
+- Avoid questions about page wording, document metadata, app navigation, or source labels.
+- Avoid trivial questions where all options are obviously wrong except one.
+- Do not include clinical-level abbreviations such as (AA), (AR), (AO), (P), (ICP), (ECP), or (Para).
+- Keep wording concise and clinically relevant.
+- Prefer multiple choice clinical interpretation questions where possible.
+- If the page content is a medicine monograph, focus on indications, contraindications, dose principles, route, precautions, or adverse effects.
+- If the page content is too limited, still create the best possible questions from the content.
+
+Return a single JSON array containing all question objects.
+
+PAGES:
+{chr(10).join(page_blocks)}
+""".strip()
+
+
+def call_gemini(prompt: str, clinical_level: str) -> Optional[List[Dict[str, Any]]]:
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+
+    if not api_key:
+        log("Warning: GEMINI_API_KEY is not set. Skipping generation.")
+        return None
+
+    for attempt in range(1, GEMINI_MAX_RETRIES + 1):
+        for model in GEMINI_MODELS:
+            url = (
+                "https://generativelanguage.googleapis.com/v1beta/models/"
+                f"{model}:generateContent?key={api_key}"
+            )
+
+            try:
+                log(f"[{clinical_level}] Trying Gemini model {model} attempt {attempt}")
+
+                response = requests.post(
+                    url,
+                    json=gemini_payload(prompt),
+                    timeout=REQUEST_TIMEOUT_SECONDS,
+                )
+
+                if response.status_code == 429:
+                    retry_after = response.headers.get("Retry-After")
+
+                    wait = (
+                        int(retry_after)
+                        if retry_after and retry_after.isdigit()
+                        else min(300, 30 * attempt + random.randint(5, 25))
+                    )
+
+                    log(
+                        f"[{clinical_level}] Gemini rate limit on {model}. "
+                        f"Waiting {wait} seconds."
+                    )
+
+                    time.sleep(wait)
+                    continue
+
+                if response.status_code == 404:
+                    log(f"[{clinical_level}] Model {model} not available. Skipping that model.")
+                    continue
+
+                response.raise_for_status()
+                data = response.json()
+
+                candidates = data.get("candidates", [])
+
+                if not candidates:
+                    log(f"[{clinical_level}] Gemini returned no candidates for {model}.")
+                    continue
+
+                parts = candidates[0].get("content", {}).get("parts", [])
+                text = "\n".join(
+                    part.get("text", "")
+                    for part in parts
+                    if isinstance(part, dict)
+                )
+
+                parsed = extract_json_array(text)
+
+                if parsed is None:
+                    log(f"[{clinical_level}] Could not parse JSON from {model}.")
+                    continue
+
+                log(f"[{clinical_level}] Model {model} produced {len(parsed)} raw questions.")
+
+                return [q for q in parsed if isinstance(q, dict)]
+
+            except requests.RequestException as exc:
+                log(f"[{clinical_level}] Model {model} failed: {exc}")
+
+            except Exception as exc:
+                log(f"[{clinical_level}] Unexpected Gemini error for {model}: {exc}")
+
+        if attempt < GEMINI_MAX_RETRIES:
+            sleep_for = min(300, 45 * attempt + random.randint(10, 30))
+            log(f"[{clinical_level}] Waiting {sleep_for} seconds before Gemini retry.")
+            time.sleep(sleep_for)
+
+    log(f"[{clinical_level}] All Gemini attempts failed for this batch. Continuing without failing workflow.")
+    return None
+
+
+def validate_question(
+    raw: Dict[str, Any],
+    page_lookup: Dict[str, Dict[str, Any]],
+) -> Optional[Dict[str, Any]]:
+    source_url = canonical_url(str(raw.get("sourceUrl", "")))
+    clinical_level = clean_generation_text(str(raw.get("clinicalLevel", "")))
+    key = source_key(clinical_level, source_url)
+
+    page = page_lookup.get(key)
+
+    if page is None:
+        for candidate in page_lookup.values():
+            if canonical_url(candidate["sourceUrl"]) == source_url:
+                page = candidate
+                clinical_level = candidate["clinicalLevel"]
+                key = candidate["key"]
+                break
+
+    if page is None:
+        return None
+
+    question = clean_generation_text(str(raw.get("question", "")))
+    options_raw = raw.get("options", [])
+
+    if not isinstance(options_raw, list):
+        return None
+
+    options = [
+        clean_generation_text(str(opt))
+        for opt in options_raw
+        if str(opt).strip()
+    ]
+
+    options = options[:4]
+
+    correct = clean_generation_text(str(raw.get("correctAnswer", "")))
+    explanation = clean_generation_text(str(raw.get("explanation", "")))
+
+    if len(options) != 4 or not question or not correct or not explanation:
+        return None
+
+    if correct not in options:
+        lowered = {opt.lower(): opt for opt in options}
+        correct = lowered.get(correct.lower(), correct)
+
+    if correct not in options:
+        return None
+
+    return {
+        "question": question,
+        "options": options,
+        "correctAnswer": correct,
+        "explanation": explanation,
+        "clinicalLevel": page["clinicalLevel"],
+        "sourceUrl": page["sourceUrl"],
+        "sourceTitle": page["sourceTitle"],
+        "sourceType": page["sourceType"],
+    }
+
+
+def question_identity(question: Dict[str, Any]) -> str:
+    return "|".join(
         [
-            "OK",
-            "Ok",
-            "I agree",
-            "Agree",
-            "Accept",
-            "Continue"
+            clean_generation_text(str(question.get("clinicalLevel", ""))).lower(),
+            canonical_url(str(question.get("sourceUrl", ""))).lower(),
+            clean_generation_text(str(question.get("question", ""))).lower(),
         ]
     )
 
 
-async def click_level_on_select_page(page, level):
-    selected = False
-
-    print(f"Trying to select level: {level}")
-
-    try:
-        locator = page.get_by_text(level, exact=True)
-
-        if await locator.count() > 0:
-            await locator.first.click(timeout=7000)
-            await page.wait_for_timeout(4000)
-            selected = True
-            print(f"Selected level by exact text: {level}")
-
-    except Exception as error:
-        print(f"Could not click exact level text {level}: {error}")
-
-    if selected:
-        return True
-
-    try:
-        locator = page.get_by_text(level, exact=False)
-
-        if await locator.count() > 0:
-            await locator.first.click(timeout=7000)
-            await page.wait_for_timeout(4000)
-            selected = True
-            print(f"Selected level by partial text: {level}")
-
-    except Exception as error:
-        print(f"Could not click partial level text {level}: {error}")
-
-    if selected:
-        return True
-
-    try:
-        candidates = await page.locator(
-            "button, a, ion-item, mat-list-item, div, span"
-        ).all()
-
-        for element in candidates[:150]:
-            try:
-                if not await element.is_visible(timeout=500):
-                    continue
-
-                label = await element.inner_text(timeout=1000)
-                label = re.sub(r"\s+", " ", label).strip()
-
-                if label == level:
-                    await element.click(timeout=7000)
-                    await page.wait_for_timeout(4000)
-                    selected = True
-                    print(f"Selected level by element scan: {level}")
-                    break
-
-            except Exception:
-                continue
-
-    except Exception:
-        pass
-
-    return selected
-
-
-async def prepare_site_for_level(page, level):
-    await page.goto(ROOT_URL, wait_until="networkidle", timeout=60000)
-    await page.wait_for_timeout(3000)
-
-    await click_disclaimer_ok_if_present(page)
-    await page.wait_for_timeout(3000)
-
-    try:
-        body_text = await page.locator("body").inner_text(timeout=30000)
-    except Exception:
-        body_text = ""
-
-    selected = False
-
-    if "select your level" in body_text.lower() or level in body_text:
-        selected = await click_level_on_select_page(page, level)
-
-    if not selected:
-        try:
-            await page.goto(HOME_URL, wait_until="networkidle", timeout=60000)
-            await page.wait_for_timeout(3000)
-
-            await click_disclaimer_ok_if_present(page)
-            await page.wait_for_timeout(2000)
-
-            body_text = await page.locator("body").inner_text(timeout=30000)
-
-            if "select your level" in body_text.lower() or level in body_text:
-                selected = await click_level_on_select_page(page, level)
-
-        except Exception as error:
-            print(f"Could not navigate to level screen for {level}: {error}")
-
-    await page.wait_for_timeout(4000)
-
-    try:
-        await page.wait_for_load_state("networkidle", timeout=30000)
-    except Exception:
-        pass
-
-    return selected
-
-
-async def prepare_current_page_if_needed(page, level):
-    try:
-        await click_disclaimer_ok_if_present(page)
-
-        body_text = await page.locator("body").inner_text(timeout=30000)
-
-        if "select your level" in body_text.lower():
-            await click_level_on_select_page(page, level)
-
-    except Exception:
-        pass
-
-
-async def collect_basic_links(page, base_url):
-    urls = set()
-
-    try:
-        links = await page.eval_on_selector_all(
-            "a[href]",
-            "els => els.map(a => a.href)"
-        )
-
-        for link in links:
-            url = clean_url(urljoin(base_url, link))
-
-            if useful_url(url):
-                urls.add(url)
-
-    except Exception:
-        pass
-
-    try:
-        html = await page.content()
-        text = await page.locator("body").inner_text(timeout=30000)
-
-        extracted_urls = extract_urls_from_text_and_html(text, html, base_url)
-
-        for url in extracted_urls:
-            if useful_url(url):
-                urls.add(url)
-
-    except Exception:
-        pass
-
-    return urls
-
-
-async def collect_clickable_routes(context, url, level):
-    discovered = set()
-    clicked_labels = []
-
-    page = await context.new_page()
-
-    try:
-        await page.goto(url, wait_until="networkidle", timeout=60000)
-        await page.wait_for_timeout(3000)
-
-        await prepare_current_page_if_needed(page, level)
-        await page.wait_for_timeout(2500)
-
-        basic_links = await collect_basic_links(page, page.url)
-
-        for link in basic_links:
-            discovered.add(link)
-
-        candidates = await page.locator(
-            "a, button, ion-card, ion-item, mat-card"
-        ).all()
-
-        for element in candidates[:140]:
-            try:
-                if not await element.is_visible(timeout=700):
-                    continue
-
-                label = await element.inner_text(timeout=1000)
-                label = re.sub(r"\s+", " ", label).strip()
-
-                if not label:
-                    continue
-
-                if len(label) > 140:
-                    continue
-
-                lower_label = label.lower()
-
-                skip_terms = [
-                    "select your level",
-                    "set your clinical level",
-                    "disclaimer",
-                    "ok",
-                    "level",
-                    "recent",
-                    "favourites",
-                    "favorites",
-                    "tools",
-                    "checklists",
-                    "cppro",
-                    "search"
-                ]
-
-                skip = False
-
-                for term in skip_terms:
-                    if term in lower_label:
-                        skip = True
-                        break
-
-                if skip:
-                    continue
-
-                before_url = clean_url(page.url)
-
-                await element.click(timeout=5000)
-                await page.wait_for_timeout(2200)
-
-                try:
-                    await page.wait_for_load_state("networkidle", timeout=10000)
-                except Exception:
-                    pass
-
-                await prepare_current_page_if_needed(page, level)
-
-                after_url = clean_url(page.url)
-
-                if useful_url(after_url) and after_url != before_url:
-                    discovered.add(after_url)
-
-                    clicked_labels.append(
-                        {
-                            "clinicalLevel": level,
-                            "from": url,
-                            "label": label[:140],
-                            "to": after_url
-                        }
-                    )
-
-                more_links = await collect_basic_links(page, after_url)
-
-                for link in more_links:
-                    discovered.add(link)
-
-                await page.goto(url, wait_until="networkidle", timeout=60000)
-                await page.wait_for_timeout(1500)
-                await prepare_current_page_if_needed(page, level)
-
-            except Exception:
-                try:
-                    await page.goto(url, wait_until="networkidle", timeout=60000)
-                    await page.wait_for_timeout(1000)
-                    await prepare_current_page_if_needed(page, level)
-
-                except Exception:
-                    pass
-
-                continue
-
-    except Exception as error:
-        print(f"[{level}] Click discovery failed on {url}: {error}")
-
-    await page.close()
-
-    return discovered, clicked_labels
-
-
-async def get_rendered_page(context, url, level):
-    page = await context.new_page()
-
-    await page.goto(url, wait_until="networkidle", timeout=60000)
-    await page.wait_for_timeout(3000)
-
-    await prepare_current_page_if_needed(page, level)
-    await page.wait_for_timeout(3000)
-
-    text = await page.locator("body").inner_text(timeout=30000)
-    html = await page.content()
-    title = await page.title()
-
-    links = await page.eval_on_selector_all(
-        "a[href]",
-        "els => els.map(a => a.href)"
-    )
-
-    await page.close()
-
-    return title, text, links, html
-
-
-async def initialise_level_context(browser, level):
-    context = await browser.new_context()
-    page = await context.new_page()
-
-    selected = False
-    current_url = ""
-    home_text = ""
-    home_html = ""
-    links = []
-
-    try:
-        selected = await prepare_site_for_level(page, level)
-        current_url = clean_url(page.url)
-        home_text = await page.locator("body").inner_text(timeout=30000)
-        home_html = await page.content()
-
-        links = await page.eval_on_selector_all(
-            "a[href]",
-            "els => els.map(a => a.href)"
-        )
-
-    except Exception as error:
-        print(f"Failed to initialise level context for {level}: {error}")
-
-    await page.close()
-
-    return context, selected, current_url, home_text, home_html, links
-
-
-async def crawl_for_level(browser, level):
-    context, selected, current_url, home_text, home_html, starting_links = await initialise_level_context(browser, level)
-
-    crawl_log = [
-        {
-            "clinicalLevel": level,
-            "selectedLevelSuccessfully": selected,
-            "currentUrlAfterSelection": current_url,
-            "homeTextLength": len(home_text)
-        }
-    ]
-
-    click_log = []
-    source_pages = []
-    queue = []
-    visited = set()
-    pages = []
-
-    if useful_url(current_url):
-        queue.append(clean_url(current_url))
-
-    for start_url in START_URLS:
-        if useful_url(start_url):
-            queue.append(clean_url(start_url))
-
-    for link in starting_links:
-        link = clean_url(urljoin(HOME_URL, link))
-
-        if useful_url(link):
-            queue.append(link)
-
-    for link in extract_urls_from_text_and_html(home_text, home_html, HOME_URL):
-        if useful_url(link):
-            queue.append(link)
-
-    if current_url:
-        try:
-            discovered, clicked = await collect_clickable_routes(context, current_url, level)
-
-            for item in clicked:
-                click_log.append(item)
-
-            for link in discovered:
-                if useful_url(link):
-                    queue.append(link)
-
-        except Exception as error:
-            print(f"[{level}] Initial click discovery failed: {error}")
-
-    queue = list(dict.fromkeys([q for q in queue if useful_url(q)]))
-
-    pages_since_new_content = 0
-
-    while queue and len(visited) < MAX_VISITED_URLS_PER_LEVEL and len(pages) < MAX_CONTENT_PAGES_PER_LEVEL:
-        if pages_since_new_content >= STOP_IF_NO_NEW_CONTENT_FOR:
-            print(f"[{level}] Stopping after {STOP_IF_NO_NEW_CONTENT_FOR} pages without new content.")
-            break
-
-        url = clean_url(queue.pop(0))
-
-        if url in visited:
+def group_existing_questions(
+    questions: List[Dict[str, Any]],
+) -> Dict[str, List[Dict[str, Any]]]:
+    grouped: Dict[str, List[Dict[str, Any]]] = {}
+
+    for q in questions:
+        if not isinstance(q, dict):
             continue
 
-        if not useful_url(url):
+        clinical_level = clean_generation_text(str(q.get("clinicalLevel", "")))
+        url = canonical_url(str(q.get("sourceUrl", "")))
+
+        if not clinical_level or not url:
             continue
 
-        visited.add(url)
-
-        try:
-            print(f"[{level}] Opening: {url}")
-            title, text, links, html = await get_rendered_page(context, url, level)
-
-        except Exception as error:
-            msg = f"[{level}] Failed to open {url}: {error}"
-            print(msg)
-            crawl_log.append(msg)
-            pages_since_new_content = pages_since_new_content + 1
-            continue
+        q["clinicalLevel"] = clinical_level
+        q["sourceUrl"] = url
 
-        text = text.strip()
-        text = re.sub(r"\n{3,}", "\n\n", text)
-        text = re.sub(r"[ \t]{2,}", " ", text)
-
-        content_category = categorise_url(url)
-
-        msg = f"[{level}] Extracted {len(text)} characters from {url} [{content_category}]"
-        print(msg)
-        crawl_log.append(msg)
-
-        if (
-            len(text) > 300
-            and is_detail_content_page(url)
-            and not looks_like_disclaimer_text(text)
-            and looks_like_real_content(text)
-        ):
-            pages.append(
-                {
-                    "clinicalLevel": level,
-                    "contentCategory": content_category,
-                    "title": title,
-                    "url": url,
-                    "text": text[:14000]
-                }
-            )
-
-            source_pages.append(
-                {
-                    "clinicalLevel": level,
-                    "sourceType": content_category,
-                    "sourceTitle": title,
-                    "sourceUrl": url,
-                    "textLength": len(text)
-                }
-            )
-
-            pages_since_new_content = 0
-
-        else:
-            pages_since_new_content = pages_since_new_content + 1
-            print(f"[{level}] Discovery page only: {url}")
-
-        for link in links:
-            link = clean_url(urljoin(url, link))
-
-            if useful_url(link) and link not in visited and link not in queue:
-                queue.append(link)
-
-        for link in extract_urls_from_text_and_html(text, html, url):
-            if useful_url(link) and link not in visited and link not in queue:
-                queue.append(link)
-
-        try:
-            discovered, clicked = await collect_clickable_routes(context, url, level)
-
-            for item in clicked:
-                click_log.append(item)
-
-            for link in discovered:
-                if useful_url(link) and link not in visited and link not in queue:
-                    queue.append(link)
-
-        except Exception as error:
-            print(f"[{level}] Click discovery failed during crawl: {error}")
-
-        await asyncio.sleep(0.4)
-
-    await context.close()
-
-    return pages, crawl_log, click_log, source_pages
-
-
-def extract_json(text):
-    text = text.strip()
-    fence = "``" + "`"
-    text = re.sub("^" + re.escape(fence) + "json", "", text, flags=re.IGNORECASE).strip()
-    text = re.sub("^" + re.escape(fence), "", text).strip()
-    text = re.sub(re.escape(fence) + "$", "", text).strip()
-
-    start = text.find("[")
-    end = text.rfind("]")
-
-    if start == -1 or end == -1:
-        print("No JSON array found in Gemini response.")
-        print(text[:1000])
-        return []
-
-    try:
-        return json.loads(text[start:end + 1])
-
-    except Exception as error:
-        print("JSON parse error:", error)
-        print(text[:1000])
-        return []
-
-
-def call_gemini(model, prompt):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-
-    payload = {
-        "contents": [
-            {
-                "parts": [
-                    {
-                        "text": prompt
-                    }
-                ]
-            }
-        ],
-        "generationConfig": {
-            "temperature": 0.1,
-            "maxOutputTokens": 4096
-        }
-    }
+        for field in [
+            "question",
+            "correctAnswer",
+            "explanation",
+            "sourceTitle",
+            "sourceType",
+        ]:
+            if field in q:
+                q[field] = clean_generation_text(str(q[field]))
 
-    response = requests.post(url, json=payload, timeout=90)
-    response.raise_for_status()
+        if isinstance(q.get("options"), list):
+            q["options"] = [
+                clean_generation_text(str(opt))
+                for opt in q["options"]
+            ]
 
-    data = response.json()
+        key = source_key(clinical_level, url)
+        grouped.setdefault(key, []).append(q)
 
-    return data["candidates"][0]["content"]["parts"][0]["text"]
-
+    return grouped
 
-def generate_from_page(page, gemini_debug):
-    clinical_level = page["clinicalLevel"]
-    content_category = page["contentCategory"]
-
-    prompt = f'''
-You are creating public formative revision questions for undergraduate paramedicine students.
-
-Clinical level:
-{clinical_level}
-
-Source category:
-{content_category}
-
-Use only the source text supplied below.
-
-Rules:
-- Do not use outside knowledge.
-- Do not infer anything not explicitly stated in the source text.
-- Do not provide clinical advice or operational advice.
-- Do not create questions from disclaimers, copyright statements, legal statements, website liability text, navigation text, Tools, Checklists, or CPPROs.
-- If the source text does not contain useful clinical practice guideline, medicine, or calculator content relevant to the clinical level, return [].
-- The explanation must briefly explain why the answer is correct using only the source text.
-- Do not start any question with "According to", "Based on", "In the source", "In the guideline", "According to SA Ambulance Service", or similar framing.
-- Write each question directly and naturally.
-- Do not mention that the information comes from SA Ambulance Service in the question stem.
-- Do not include clinical-level abbreviations such as "(Para)", "(ICP)", "(ECP)", "(AO)", "(AOES)", "(AR)", or "(AA)" in questions, options, or explanations.
-- If a clinical level needs to be mentioned, write the full clinical level name only.
-
-Create up to {QUESTIONS_PER_PAGE} questions.
-Prefer 1 multiple choice and 1 true/false.
-
-Return only a valid JSON array.
-Do not include markdown.
-
-Each item must contain:
-question, options, correctAnswer, explanation, clinicalLevel, sourceUrl, sourceTitle, sourceType
-
-For multiple choice questions:
-- options must contain exactly 4 strings
-- correctAnswer must match one option exactly
-
-For true/false questions:
-- options must be ["True", "False"]
-- correctAnswer must be "True" or "False"
-
-Source title:
-{page["title"]}
-
-Source URL:
-{page["url"]}
-
-Source text:
-{page["text"]}
-'''
-
-    for model in GEMINI_MODELS:
-        debug_entry = {
-            "sourceUrl": page["url"],
-            "sourceTitle": page["title"],
-            "clinicalLevel": clinical_level,
-            "sourceType": content_category,
-            "model": model,
-            "status": "started"
-        }
-
-        try:
-            print(f"[{clinical_level}] Trying Gemini model {model}")
-            response_text = call_gemini(model, prompt)
-
-            debug_entry["status"] = "responseReceived"
-            debug_entry["rawResponseStart"] = response_text[:1200]
-
-            items = extract_json(response_text)
-
-            debug_entry["parsedItems"] = len(items)
 
-            gemini_debug.append(debug_entry)
-
-            if items:
-                print(f"[{clinical_level}] Model {model} produced {len(items)} raw questions.")
-                return items
+def get_old_hash(page_records: Dict[str, Any], key: str) -> Optionalold_record = page_records.get(key)
 
-        except Exception as error:
-            debug_entry["status"] = "failed"
-            debug_entry["error"] = str(error)
-            gemini_debug.append(debug_entry)
-            print(f"[{clinical_level}] Model {model} failed: {error}")
+    if isinstance(old_record, dict):
+        value = old_record.get("hash")
+        return str(value) if value is not None else None
 
-    return []
+    if isinstance(old_record, str):
+        return old_record
 
+    return None
 
-def question_looks_like_disclaimer(question, answer, explanation, source_title):
-    combined = (
-        question + " " +
-        answer + " " +
-        explanation + " " +
-        source_title
-    ).lower()
 
-    terms = [
-        "liability",
-        "not intended to serve as health",
-        "medical or treatment advice",
-        "information purposes only",
-        "external websites",
-        "does not represent or warrant",
-        "maximum extent permitted by law",
-        "does not endorse"
-    ]
+async def main() -> None:
+    started = time.time()
 
-    for term in terms:
-        if term in combined:
-            return True
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    return False
+    existing_questions_raw = load_json(QUESTIONS_FILE, [])
 
+    if not isinstance(existing_questions_raw, list):
+        log("Warning: existing questions.json is not a list. Starting with an empty list.")
+        existing_questions_raw = []
 
-def clean_questions(items, clinical_level, content_category, fallback_source, fallback_title, gemini_debug):
-    cleaned = []
+    existing_by_page = group_existing_questions(existing_questions_raw)
 
-    for item in items:
-        rejection_reason = ""
+    page_records = load_json(PAGE_RECORDS_FILE, {})
 
-        if not isinstance(item, dict):
-            gemini_debug.append(
-                {
-                    "sourceUrl": fallback_source,
-                    "clinicalLevel": clinical_level,
-                    "sourceType": content_category,
-                    "status": "questionRejected",
-                    "reason": "itemNotDictionary"
-                }
-            )
-
-            continue
-
-        question = str(item.get("question", "")).strip()
-        options = item.get("options", [])
-
-        correct_answer = str(
-            item.get("correctAnswer", item.get("answer", ""))
-        ).strip()
-
-        explanation = str(item.get("explanation", "")).strip()
+    if not isinstance(page_records, dict):
+        page_records = {}
 
-        source_url = str(
-            item.get("sourceUrl", item.get("source", fallback_source))
-        ).strip()
+    log("Starting incremental all-clinical-level crawl.")
 
-        source_title = str(
-            item.get("sourceTitle", item.get("source_title", fallback_title))
-        ).strip()
-
-        source_type = str(
-            item.get("sourceType", item.get("content_category", content_category))
-        ).strip()
-
-        question_clinical_level = str(
-            item.get("clinicalLevel", item.get("clinical_level", clinical_level))
-        ).strip()
-
-        question = strip_superfluous_question_prefix(question)
-        question = clean_generated_text(question)
-        correct_answer = clean_generated_text(correct_answer)
-        explanation = clean_generated_text(explanation)
-
-        if not question:
-            rejection_reason = "missingQuestion"
-
-        elif not isinstance(options, list):
-            rejection_reason = "optionsNotList"
-
-        else:
-            cleaned_options = []
-
-            for option in options:
-                option_text = clean_generated_text(str(option).strip())
-
-                if option_text:
-                    cleaned_options.append(option_text)
-
-            options = cleaned_options
-
-            if len(options) not in [2, 4]:
-                rejection_reason = "invalidOptionCount"
-
-            elif not correct_answer:
-                rejection_reason = "missingCorrectAnswer"
-
-            elif correct_answer not in options:
-                rejection_reason = "correctAnswerNotInOptions"
-
-            elif not explanation:
-                rejection_reason = "missingExplanation"
-
-            elif is_excluded_url(clean_url(source_url)):
-                rejection_reason = "excludedSource"
-
-            elif clean_url(source_url) in [ROOT_URL, HOME_URL]:
-                rejection_reason = "homepageSource"
-
-            elif "Home | SA Ambulance Service" in source_title:
-                rejection_reason = "homeSourceTitle"
-
-            elif question_looks_like_disclaimer(question, correct_answer, explanation, source_title):
-                rejection_reason = "looksLikeDisclaimer"
-
-        if rejection_reason:
-            gemini_debug.append(
-                {
-                    "sourceUrl": fallback_source,
-                    "clinicalLevel": clinical_level,
-                    "sourceType": content_category,
-                    "status": "questionRejected",
-                    "reason": rejection_reason,
-                    "question": question[:300],
-                    "correctAnswer": correct_answer,
-                    "sourceTitle": source_title
-                }
-            )
-
-            continue
-
-        cleaned.append(
-            {
-                "question": question,
-                "options": options,
-                "correctAnswer": correct_answer,
-                "explanation": explanation,
-                "clinicalLevel": question_clinical_level or clinical_level,
-                "sourceUrl": fallback_source,
-                "sourceTitle": fallback_title,
-                "sourceType": source_type or content_category,
-                "updatedAt": datetime.now(timezone.utc).isoformat()
-            }
-        )
-
-    return cleaned
-
-
-async def main():
-    print("Starting incremental all-clinical-level crawl.")
-
-    old_hashes = load_json(PAGE_HASHES_PATH, {})
-    old_questions_by_source = load_json(QUESTIONS_BY_SOURCE_PATH, {})
-
-    all_pages = []
-    all_crawl_logs = []
-    all_click_logs = []
-    all_source_pages = []
-    gemini_debug = []
+    all_pages: List[Dict[str, Any]] = []
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
 
-        for level in CLINICAL_LEVELS:
-            print(f"Starting crawl for clinical level: {level}")
+        try:
+            for clinical_level in CLINICAL_LEVELS:
+                log(f"Starting crawl for clinical level: {clinical_level}")
+                pages = await crawl_level(browser, clinical_level)
+                all_pages.extend(pages)
+        finally:
+            await browser.close()
 
-            pages, crawl_log, click_log, source_pages = await crawl_for_level(browser, level)
-
-            print(f"{level}: crawled {len(pages)} usable detail pages.")
-
-            all_pages.extend(pages)
-            all_crawl_logs.extend(crawl_log)
-            all_click_logs.extend(click_log)
-            all_source_pages.extend(source_pages)
-
-        await browser.close()
-
-    current_keys = set()
-    new_hashes = {}
-    new_questions_by_source = {}
-
-    source_count_by_level = {}
-    pages_new = 0
-    pages_changed = 0
-    pages_unchanged = 0
-    pages_missing_questions = 0
-    gemini_calls = 0
-    generation_failures = 0
-    changed_or_new_source_keys = []
-
-    now = datetime.now(timezone.utc).isoformat()
-
-    for page in all_pages:
-        source_key = make_source_key(page["clinicalLevel"], page["url"])
-        current_keys.add(source_key)
-
-        source_count_by_level[page["clinicalLevel"]] = source_count_by_level.get(page["clinicalLevel"], 0) + 1
-
-        page_hash = calculate_hash(page["text"])
-        old_record = old_hashes.get(source_key)
-        old_questions = old_questions_by_source.get(source_key)
-
-        should_generate = False
-        change_reason = "unchanged"
-
-        if old_record is None:
-            pages_new = pages_new + 1
-            should_generate = True
-            change_reason = "new"
-
-        elif old_record.get("hash") != page_hash:
-            pages_changed = pages_changed + 1
-            should_generate = True
-            change_reason = "changed"
-
-        elif not old_questions:
-            pages_missing_questions = pages_missing_questions + 1
-            should_generate = True
-            change_reason = "missingQuestions"
-
-        else:
-            pages_unchanged = pages_unchanged + 1
-            should_generate = False
-            change_reason = "unchanged"
-
-        if should_generate:
-            last_changed = now
-            changed_or_new_source_keys.append(source_key)
-        elif old_record:
-            last_changed = old_record.get("lastChanged", old_record.get("last_changed", now))
-        else:
-            last_changed = now
-
-        new_hashes[source_key] = {
-            "hash": page_hash,
-            "clinicalLevel": page["clinicalLevel"],
-            "sourceType": page["contentCategory"],
-            "sourceTitle": page["title"],
-            "sourceUrl": page["url"],
-            "lastSeen": now,
-            "lastChanged": last_changed,
-            "changeReason": change_reason
-        }
-
-        if should_generate:
-            gemini_calls = gemini_calls + 1
-
-            raw_items = generate_from_page(page, gemini_debug)
-
-            cleaned_items = clean_questions(
-                raw_items,
-                page["clinicalLevel"],
-                page["contentCategory"],
-                page["url"],
-                page["title"],
-                gemini_debug
-            )
-
-            gemini_debug.append(
-                {
-                    "sourceUrl": page["url"],
-                    "clinicalLevel": page["clinicalLevel"],
-                    "sourceType": page["contentCategory"],
-                    "status": "cleaningComplete",
-                    "rawItems": len(raw_items),
-                    "cleanedItems": len(cleaned_items),
-                    "changeReason": change_reason
-                }
-            )
-
-            if cleaned_items:
-                new_questions_by_source[source_key] = cleaned_items
-            else:
-                generation_failures = generation_failures + 1
-                new_questions_by_source[source_key] = []
-
-        else:
-            if isinstance(old_questions, list):
-                cleaned_old_questions = []
-
-                for question in old_questions:
-                    cleaned_old_questions.append(clean_question_record(question))
-
-                new_questions_by_source[source_key] = cleaned_old_questions
-            else:
-                new_questions_by_source[source_key] = []
-
-    old_keys = set(old_hashes.keys()) | set(old_questions_by_source.keys())
-    removed_keys = sorted(list(old_keys - current_keys))
-    pages_removed = len(removed_keys)
-
-    active_questions = []
-
-    for source_key in sorted(new_questions_by_source.keys()):
-        if source_key not in current_keys:
-            continue
-
-        source_questions = new_questions_by_source.get(source_key, [])
-
-        if not isinstance(source_questions, list):
-            continue
-
-        for question in source_questions:
-            active_questions.append(clean_question_record(question))
-
-    if not active_questions:
-        active_questions = [
-            {
-                "question": "The quiz generator ran, but no valid questions were produced.",
-                "options": ["True", "False"],
-                "correctAnswer": "True",
-                "explanation": "No valid source-grounded questions were generated during this run.",
-                "clinicalLevel": "All",
-                "sourceUrl": HOME_URL,
-                "sourceTitle": "Fallback",
-                "sourceType": "Fallback",
-                "updatedAt": now
-            }
-        ]
-
-    counts_by_level = {}
-    counts_by_category = {}
-
-    for question in active_questions:
-        level = question.get("clinicalLevel", "Unknown")
-        category = question.get("sourceType", "Unknown")
-
-        counts_by_level[level] = counts_by_level.get(level, 0) + 1
-        counts_by_category[category] = counts_by_category.get(category, 0) + 1
-
-    metadata = {
-        "generatedAt": now,
-        "mode": "incremental_all_clinical_levels",
-        "clinicalLevels": CLINICAL_LEVELS,
-        "sourceCount": len(all_pages),
-        "sourceCountByLevel": source_count_by_level,
-        "questionsCount": len(active_questions),
-        "questionCount": len(active_questions),
-        "questionCountByLevel": counts_by_level,
-        "questionCountBySourceType": counts_by_category,
-        "pagesNew": pages_new,
-        "pagesChanged": pages_changed,
-        "pagesUnchanged": pages_unchanged,
-        "pagesMissingQuestions": pages_missing_questions,
-        "pagesRemoved": pages_removed,
-        "removedSourceKeys": removed_keys,
-        "changedOrNewSourceCount": len(changed_or_new_source_keys),
-        "changedOrNewSourceKeys": changed_or_new_source_keys,
-        "geminiCalls": gemini_calls,
-        "generationFailures": generation_failures,
-        "clickedRoutesCount": len(all_click_logs),
-        "includedSources": {
-            "clinicalPracticeGuidelines": HOME_URL,
-            "medicines": MEDICINES_URL,
-            "calculators": CALCULATORS_URL
-        },
-        "excludedSources": EXCLUDED_URL_PREFIXES,
-        "maxVisitedUrlsPerLevel": MAX_VISITED_URLS_PER_LEVEL,
-        "maxContentPagesPerLevel": MAX_CONTENT_PAGES_PER_LEVEL,
-        "stopIfNoNewContentFor": STOP_IF_NO_NEW_CONTENT_FOR
+    page_lookup = {
+        page["key"]: page
+        for page in all_pages
     }
 
-    save_json(QUESTIONS_PATH, active_questions)
-    save_json(QUESTIONS_BY_SOURCE_PATH, new_questions_by_source)
-    save_json(PAGE_HASHES_PATH, new_hashes)
-    save_json(METADATA_PATH, metadata)
-    save_json(CRAWL_LOG_PATH, all_crawl_logs)
-    save_json(CLICK_LOG_PATH, all_click_logs)
-    save_json(SOURCE_PAGES_PATH, all_source_pages)
-    save_json(GEMINI_DEBUG_PATH, gemini_debug)
+    save_json(
+        CRAWL_FILE,
+        [
+            {
+                k: v
+                for k, v in page.items()
+                if k != "text"
+            }
+            for page in all_pages
+        ],
+    )
 
-    print(f"Saved {len(active_questions)} active questions from {len(all_pages)} active source pages.")
-    print(f"Gemini calls this run: {gemini_calls}")
-    print(f"Pages removed this run: {pages_removed}")
-    print(f"Changed or new source count: {len(changed_or_new_source_keys)}")
+    changed_pages: List[Dict[str, Any]] = []
+    unchanged_keys = set()
+
+    for page in all_pages:
+        old_hash = get_old_hash(page_records, page["key"])
+        has_existing_questions = bool(existing_by_page.get(page["key"]))
+
+        if old_hash != page["hash"] or not has_existing_questions:
+            changed_pages.append(page)
+        else:
+            unchanged_keys.add(page["key"])
+
+    log(f"Crawled {len(all_pages)} usable pages total.")
+    log(f"Changed or missing-question pages requiring generation: {len(changed_pages)}")
+    log(f"Unchanged pages retaining existing questions: {len(unchanged_keys)}")
+
+    final_questions: List[Dict[str, Any]] = []
+
+    for key in sorted(unchanged_keys):
+        final_questions.extend(existing_by_page.get(key, []))
+
+    generated_by_page: Dict[str, List[Dict[str, Any]]] = {}
+
+    if changed_pages:
+        for i in range(0, len(changed_pages), BATCH_SIZE):
+            batch = changed_pages[i:i + BATCH_SIZE]
+
+            clinical_label = ", ".join(
+                sorted(
+                    {
+                        p["clinicalLevel"]
+                        for p in batch
+                    }
+                )
+            )
+
+            prompt = build_batch_prompt(batch)
+            raw_questions = call_gemini(prompt, clinical_label)
+
+            if raw_questions is None:
+                for page in batch:
+                    fallback = existing_by_page.get(page["key"], [])
+
+                    if fallback:
+                        log(
+                            f"[{page['clinicalLevel']}] Keeping existing questions for "
+                            f"{page['sourceUrl']} after generation failure."
+                        )
+
+                        generated_by_page.setdefault(page["key"], []).extend(fallback)
+
+                    else:
+                        log(
+                            f"[{page['clinicalLevel']}] No questions generated for "
+                            f"{page['sourceUrl']} due to Gemini failure."
+                        )
+
+                continue
+
+            valid_count = 0
+
+            for raw in raw_questions:
+                q = validate_question(raw, page_lookup)
+
+                if q is None:
+                    continue
+
+                generated_by_page.setdefault(
+                    source_key(q["clinicalLevel"], q["sourceUrl"]),
+                    [],
+                ).append(q)
+
+                valid_count += 1
+
+            log(f"{clinical_label}: accepted {valid_count} valid questions from batch.")
+
+            if GEMINI_DELAY_SECONDS > 0 and i + BATCH_SIZE < len(changed_pages):
+                log(f"Waiting {GEMINI_DELAY_SECONDS} seconds before next Gemini batch.")
+                time.sleep(GEMINI_DELAY_SECONDS)
+
+    for page in changed_pages:
+        key = page["key"]
+        new_questions = generated_by_page.get(key, [])
+
+        if new_questions:
+            final_questions.extend(new_questions)
+        else:
+            final_questions.extend(existing_by_page.get(key, []))
+
+    deduped: List[Dict[str, Any]] = []
+    seen_questions = set()
+
+    for q in final_questions:
+        ident = question_identity(q)
+
+        if ident in seen_questions:
+            continue
+
+        seen_questions.add(ident)
+        deduped.append(q)
+
+    level_order = {
+        level: i
+        for i, level in enumerate(CLINICAL_LEVELS)
+    }
+
+    deduped.sort(
+        key=lambda q: (
+            level_order.get(q.get("clinicalLevel", ""), 999),
+            str(q.get("sourceType", "")),
+            str(q.get("sourceTitle", "")),
+            str(q.get("question", "")),
+        )
+    )
+
+    new_records: Dict[str, Any] = {}
+
+    for page in all_pages:
+        new_records[page["key"]] = {
+            "hash": page["hash"],
+            "clinicalLevel": page["clinicalLevel"],
+            "sourceUrl": page["sourceUrl"],
+            "sourceTitle": page["sourceTitle"],
+            "sourceType": page["sourceType"],
+            "lastSeen": int(time.time()),
+        }
+
+    save_json(QUESTIONS_FILE, deduped)
+    save_json(PAGE_RECORDS_FILE, new_records)
+
+    by_level: Dict[str, int] = {
+        level: 0
+        for level in CLINICAL_LEVELS
+    }
+
+    for q in deduped:
+        level = q.get("clinicalLevel", "")
+        by_level[level] = by_level.get(level, 0) + 1
+
+    log("Question counts by clinical level:")
+
+    for level in CLINICAL_LEVELS:
+        log(f"- {level}: {by_level.get(level, 0)}")
+
+    elapsed = int(time.time() - started)
+    log(f"Finished successfully in {elapsed} seconds. Wrote {len(deduped)} questions.")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+
+    except KeyboardInterrupt:
+        log("Cancelled by user.")
+        sys.exit(130)
