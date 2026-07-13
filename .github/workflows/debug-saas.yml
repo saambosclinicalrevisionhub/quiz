@@ -1,0 +1,34 @@
+name: Debug SAAS Crawl
+
+on:
+  workflow_dispatch:
+
+jobs:
+  debug-saas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python packages
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Run SAAS debug crawl
+        run: |
+          python scripts/debug_saas_crawl.py
+
+      - name: Upload debug artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: debug-saas
+          path: debug_saas/
