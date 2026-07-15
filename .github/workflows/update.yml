@@ -28,8 +28,13 @@ jobs:
 
       - name: Install Python packages
         run: |
+          python -m pip install --upgrade pip
           pip install requests playwright
           python -m playwright install --with-deps chromium
+
+      - name: Check generate_questions.py syntax
+        run: |
+          python -m py_compile scripts/generate_questions.py
 
       - name: Generate quiz questions
         env:
@@ -37,20 +42,19 @@ jobs:
         run: |
           python scripts/generate_questions.py
 
+      - name: Validate questions.json
+        run: |
+          python -c "import json; from pathlib import Path; p=Path('data/questions.json'); assert p.exists(), 'data/questions.json does not exist'; data=json.loads(p.read_text(encoding='utf-8')); assert isinstance(data, list), 'data/questions.json is not a JSON list'; assert len(data) > 0, 'data/questions.json contains zero questions'; required={'question','options','correctAnswer','explanation','clinicalLevel','sourceUrl','sourceTitle','sourceType'}; [(_ for _ in ()).throw(AssertionError(f'Question at index {i} is not an object')) for i,q in enumerate(data) if not isinstance(q, dict)]; [(_ for _ in ()).throw(AssertionError(f'Question at index {i} is missing fields: {sorted(required-set(q))}')) for i,q in enumerate(data) if isinstance(q, dict) and required-set(q)]; [(_ for _ in ()).throw(AssertionError(f'Question at index {i} does not have exactly 4 options')) for i,q in enumerate(data) if isinstance(q, dict) and (not isinstance(q.get('options'), list) or len(q.get('options')) != 4)]; [(_ for _ in ()).throw(AssertionError(f'Question at index {i} has a correctAnswer that is not in options')) for i,q in enumerate(data) if isinstance(q, dict) and q.get('correctAnswer') not in q.get('options', [])]; print(f'Validated {len(data)} questions in data/questions.json')"
+
       - name: Commit updated quiz data
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-
-          git add data/*.json
-
+          git add data/questions.json data/page_records.json data/crawled_pages.json
           if git diff --staged --quiet; then
             echo "No quiz data changes to commit."
             exit 0
           fi
-
-          git commit -m "Update quiz questions"
-
           git pull --rebase origin main
-
+          git commit -m "Update quiz questions"
           git push origin main
